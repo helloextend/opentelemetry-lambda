@@ -12,7 +12,7 @@ on:
 jobs:
 
   package:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: ${{ github.ref == 'refs/heads/coralogix-python-autoinstrumentation' || inputs.environment == 'test' }}
     environment: ${{ inputs.environment }}
     env:
@@ -61,7 +61,7 @@ jobs:
         retention-days: 1
 
   publish-layer:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: ${{ github.ref == 'refs/heads/coralogix-python-autoinstrumentation' || inputs.environment == 'test' }}
     needs: [package]
     environment: ${{ inputs.environment }}
