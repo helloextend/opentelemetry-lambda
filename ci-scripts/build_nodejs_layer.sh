@@ -135,6 +135,13 @@ npm install -g copyfiles bestzip rimraf
 
 # Build layer
 pushd "./nodejs/packages/layer" > /dev/null
-npm run clean && npm install
+npm run clean && npm install --production
+# Dedupe dependencies to remove duplicates and reduce size
+npm dedupe
+# Remove unnecessary files to reduce layer size
+find node_modules -name "*.map" -delete
+find node_modules -type d \( -name "test" -o -name "tests" -o -name "docs" -o -name "doc" \) -exec rm -rf {} + 2>/dev/null || true
+# Rebuild layer with optimized dependencies
+npm run clean && npm run compile
 ls -lah build/layer.zip
 popd > /dev/null
