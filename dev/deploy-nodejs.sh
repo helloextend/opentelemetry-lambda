@@ -13,9 +13,9 @@ if [ -z "$LAMBDA_LAYER_PREFIX" ]; then
     exit 1
 fi
 
-if [ -z "$AWS_PROFILE" ]; then
-    echo "AWS_PROFILE is not set"
-    exit 1
+if [ -z "${AWS_PROFILE:-}" ]; then
+    export AWS_PROFILE=default
+    echo "AWS_PROFILE not set, using default: $AWS_PROFILE"
 fi
 
 "$ROOT_DIR/dev/build-nodejs.sh"
@@ -23,9 +23,10 @@ fi
 output=$(aws lambda publish-layer-version \
   --layer-name "$LAMBDA_LAYER_PREFIX-coralogix-opentelemetry-nodejs-wrapper-development" \
   --compatible-architectures x86_64 arm64 \
-  --compatible-runtimes nodejs16.x nodejs18.x nodejs20.x \
+  --compatible-runtimes nodejs18.x nodejs20.x nodejs22.x \
   --zip-file fileb://nodejs/packages/layer/build/layer.zip \
   --region eu-west-1 \
-  --profile "$AWS_PROFILE")
+  --profile "$AWS_PROFILE" \
+  --output json)
 versionArn=$(echo "$output" | jq -r .LayerVersionArn)
 echo "$versionArn"
