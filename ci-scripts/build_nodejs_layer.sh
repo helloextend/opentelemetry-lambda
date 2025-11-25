@@ -30,10 +30,11 @@ echo "CWD=$CWD"
 npm cache clean --force
 
 pushd "$OPENTELEMETRY_JS_CONTRIB_PATH" > /dev/null
-# Generate version files in opentelemetry-js-contrib
-npx lerna@6.6.2 run version:update # Newer versions have trouble with our lerna.json which contains `useWorkspaces`
 # Prepare opentelemetry-js-contrib
 npm install
+# Generate version files in opentelemetry-js-contrib
+# Lerna 9 no longer requires useWorkspaces configuration - it uses npm workspaces by default
+npm run version:update
 popd > /dev/null
 
 # Build contrib-test-utils
@@ -77,6 +78,8 @@ popd > /dev/null
 # Prepare opentelemetry-js
 pushd "$OPENTELEMETRY_JS_PATH" > /dev/null
 npm install
+# Generate version files in opentelemetry-js (required for TypeScript compilation)
+npx nx run-many -t version
 popd > /dev/null
 
 # Build sdk-logs
