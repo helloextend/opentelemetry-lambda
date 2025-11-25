@@ -78,6 +78,8 @@ popd > /dev/null
 # Prepare opentelemetry-js
 pushd "$OPENTELEMETRY_JS_PATH" > /dev/null
 npm install
+# Generate version files in opentelemetry-js (required for TypeScript compilation)
+npx nx run-many -t version
 popd > /dev/null
 
 # Build sdk-logs
