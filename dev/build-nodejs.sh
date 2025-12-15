@@ -3,21 +3,24 @@
 #
 # The script expects the dependencies to be cloned in specific locations
 # relative to this repository's root directory.
+#
+# If you encounter build issues, try cleaning first:
+#   git clean -xdf nodejs
 
 set -euo pipefail
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
 
 # Expected by build_nodejs_layer.sh
-if [ -z "$OPENTELEMETRY_JS_CONTRIB_PATH" ]; then
+if [ -z "${OPENTELEMETRY_JS_CONTRIB_PATH:-}" ]; then
 	export OPENTELEMETRY_JS_CONTRIB_PATH="$ROOT_DIR/opentelemetry-js-contrib-cx"
 fi
 
-if [ -z "$OPENTELEMETRY_JS_PATH" ]; then
+if [ -z "${OPENTELEMETRY_JS_PATH:-}" ]; then
 	export OPENTELEMETRY_JS_PATH="$ROOT_DIR/opentelemetry-js"
 fi
 
-if [ -z "$IITM_PATH" ]; then
+if [ -z "${IITM_PATH:-}" ]; then
 	export IITM_PATH="$ROOT_DIR/import-in-the-middle"
 fi
 
