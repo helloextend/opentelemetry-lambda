@@ -5,7 +5,7 @@ import { getEnv } from '@opentelemetry/core';
 diag.setLogger(new DiagConsoleLogger(), getEnv().OTEL_LOG_LEVEL);
 
 import { Callback, Context } from 'aws-lambda';
-import { Handler } from "aws-lambda/handler.js";
+import { Handler } from 'aws-lambda/handler.js';
 import { load } from './loader.js';
 import { initializeInstrumentations } from './instrumentation-init.js';
 import { initializeProvider } from './provider-init.js';
@@ -50,28 +50,83 @@ if (parseBooleanEnvvar("OTEL_WARM_UP_EXPORTER") ?? true) {
   } catch (e) {}
 }
 
-export const handler = (event: any, context: Context, callback: Callback) => {
-  diag.debug(`Loading original handler ${process.env.CX_ORIGINAL_HANDLER}`);
-  load(
-    process.env.LAMBDA_TASK_ROOT,
-    process.env.CX_ORIGINAL_HANDLER
-  ).then(
-    (originalHandler) => {
-      try {
-        diag.debug(`Instrumenting handler`);
-        const patchedHandler = lambdaInstrumentation.getPatchHandler(originalHandler) as any as Handler;
-        diag.debug(`Running CX handler and redirecting to ${process.env.CX_ORIGINAL_HANDLER}`)
-        patchedHandler(event, context, callback);
-      } catch (err: any) {
-        context.callbackWaitsForEmptyEventLoop = false;
-        callback(err, null);
+async function invokePatchedHandler(
+  patchedHandler: Handler,
+  event: any,
+  context: Context
+) {
+  // Handlers that declare a callback parameter should only resolve via that callback;
+  // short‑circuiting their returned promise causes API Gateway to receive `undefined`.
+  const expectsCallback = patchedHandler.length >= 3;
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const wrappedCallback: Callback = (err, result) => {
+      if (settled) {
+        return;
       }
-    },
-    (err: Error | string) => {
-      context.callbackWaitsForEmptyEventLoop = false;
-      callback(err, null)
+      settled = true;
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    };
+
+    try {
+      const maybePromise = patchedHandler(event, context, wrappedCallback);
+      if (
+        maybePromise &&
+        typeof (maybePromise as Promise<unknown>).then === 'function'
+      ) {
+        (maybePromise as Promise<unknown>).then(
+          value => {
+            if (!settled && !expectsCallback) {
+              settled = true;
+              resolve(value);
+            }
+          },
+          err => {
+            if (!settled) {
+              settled = true;
+              reject(err);
+            }
+          }
+        );
+      } else if (!expectsCallback) {
+        settled = true;
+        resolve(maybePromise);
+      }
+    } catch (err) {
+      if (!settled) {
+        settled = true;
+        reject(err);
+      }
     }
-  );
+  });
 }
+
+export const handler = async (event: any, context: Context) => {
+  diag.debug(`Loading original handler ${process.env.CX_ORIGINAL_HANDLER}`);
+  try {
+    const originalHandler = await load(
+      process.env.LAMBDA_TASK_ROOT,
+      process.env.CX_ORIGINAL_HANDLER
+    );
+
+    diag.debug(`Instrumenting handler`);
+    const patchedHandler = lambdaInstrumentation.getPatchHandler(
+      originalHandler
+    ) as unknown as Handler;
+    diag.debug(
+      `Running CX handler and redirecting to ${process.env.CX_ORIGINAL_HANDLER}`
+    );
+    return await invokePatchedHandler(patchedHandler, event, context);
+  } catch (err) {
+    context.callbackWaitsForEmptyEventLoop = false;
+    diag.error('CX handler failed to execute', err as Error);
+    throw err;
+  }
+};
 
 diag.debug('OpenTelemetry instrumentation is ready');
