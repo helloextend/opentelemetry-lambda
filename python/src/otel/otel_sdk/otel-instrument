@@ -70,6 +70,15 @@ END_DOCUMENTATION
 
 export LAMBDA_LAYER_PKGS_DIR="/opt/python";
 
+# Ensure pip honors the layer's compatibility constraints when invoked at runtime.
+# The pip.conf shipped in the layer points at constraints.txt so any subsequent
+# `pip install` (for example `pip install llm-tracekit`) keeps the OpenTelemetry
+# packages on the exact versions baked into the layer unless the user explicitly
+# overrides PIP_CONFIG_FILE.
+if [ -z "${PIP_CONFIG_FILE}" ]; then
+    export PIP_CONFIG_FILE="/opt/python/otel_sdk/pip.conf";
+fi
+
 # - Set Lambda Layer python packages in PYTHONPATH so `opentelemetry-instrument`
 #   script can find them (it needs to find `opentelemetry` to find the auto
 #   instrumentation `run()` method later)
