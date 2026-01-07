@@ -1,5 +1,7 @@
-opentelemetry-exporter-otlp-proto-http==1.31.0
-opentelemetry-distro==0.52b0
-file:opentelemetry_instrumentation_aws_lambda-0.52b0-py3-none-any.whl
-file:opentelemetry_instrumentation_botocore-0.52b0-py3-none-any.whl
+opentelemetry-exporter-otlp-proto-http==1.39.0
+opentelemetry-api==1.39.0
+opentelemetry-sdk==1.39.0
+opentelemetry-distro==0.60b0
+file:opentelemetry_instrumentation_aws_lambda-0.60b0-py3-none-any.whl
+file:opentelemetry_instrumentation_botocore-0.60b0-py3-none-any.whl
 setuptools==80.8.0

@@ -99,12 +99,14 @@ python3 -m pip install -r ./otel_sdk/requirements-nodeps.txt -t ./build/tmp --no
 cp -r ./build/tmp/* ./build/python/
 rm -rf ./build/tmp
 
-log "Copying otel-instrument, otel-handler, otel_wrapper"
+log "Copying otel-instrument, otel-handler, otel_wrapper, pip.conf, constraints.txt"
 cp ./otel_sdk/otel-instrument ./build/otel-instrument
 chmod 755 ./build/otel-instrument
 cp ./otel_sdk/otel-instrument ./build/otel-handler
 chmod 755 ./build/otel-handler
 cp ./otel_sdk/otel_wrapper.py ./build/python/
+cp ./otel_sdk/pip.conf ./build/python/
+cp ./otel_sdk/constraints.txt ./build/python/
 
 log "Cleaning up boto and urllib3"
 rm -rf ./build/python/boto*
