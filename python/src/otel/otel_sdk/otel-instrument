@@ -76,7 +76,7 @@ export LAMBDA_LAYER_PKGS_DIR="/opt/python";
 # packages on the exact versions baked into the layer unless the user explicitly
 # overrides PIP_CONFIG_FILE.
 if [ -z "${PIP_CONFIG_FILE}" ]; then
-    export PIP_CONFIG_FILE="/opt/python/otel_sdk/pip.conf";
+    export PIP_CONFIG_FILE="/opt/python/pip.conf";
 fi
 
 # - Set Lambda Layer python packages in PYTHONPATH so `opentelemetry-instrument`
