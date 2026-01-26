@@ -35,7 +35,7 @@
     "@opentelemetry/core": "1.30.1",
     "@opentelemetry/exporter-metrics-otlp-proto": "0.57.2",
     "@opentelemetry/exporter-trace-otlp-proto": "0.57.2",
-    "@opentelemetry/instrumentation": "file:../../../opentelemetry-js/experimental/packages/opentelemetry-instrumentation/opentelemetry-instrumentation-0.207.0.tgz",
+    "@opentelemetry/instrumentation": "file:../../../opentelemetry-js/experimental/packages/opentelemetry-instrumentation/opentelemetry-instrumentation-0.208.0.tgz",
     "@opentelemetry/instrumentation-aws-lambda": "file:../../../opentelemetry-js-contrib-cx/packages/instrumentation-aws-lambda/opentelemetry-instrumentation-aws-lambda-0.61.0.tgz",
     "@opentelemetry/instrumentation-aws-sdk": "file:../../../opentelemetry-js-contrib-cx/packages/instrumentation-aws-sdk/opentelemetry-instrumentation-aws-sdk-0.64.0.tgz",
     "@opentelemetry/instrumentation-dns": "0.43.1",
@@ -60,11 +60,6 @@
     "@opentelemetry/sdk-trace-base": "1.30.1",
     "@opentelemetry/sdk-trace-node": "1.30.1",
     "@opentelemetry/semantic-conventions": "1.28.0",
-    "import-in-the-middle": "file:../../../import-in-the-middle/import-in-the-middle-1.8.1.tgz"
-  },
-  "overrides": {
-    "@opentelemetry/instrumentation": {
-      "import-in-the-middle": "$import-in-the-middle"
-    }
+    "import-in-the-middle": "2.0.5"
   }
 }

@@ -14,17 +14,11 @@ if [ -z "${OPENTELEMETRY_JS_PATH:-}" ]; then
 fi
 OPENTELEMETRY_JS_PATH=$(realpath "$OPENTELEMETRY_JS_PATH")
 
-if [ -z "${IITM_PATH:-}" ]; then
-    echo "IITM_PATH is not set"
-    exit 1
-fi
-IITM_PATH=$(realpath "$IITM_PATH")
 
 CWD=$(pwd)
 
 echo "OPENTELEMETRY_JS_CONTRIB_PATH=$OPENTELEMETRY_JS_CONTRIB_PATH"
 echo "OPENTELEMETRY_JS_PATH=$OPENTELEMETRY_JS_PATH"
-echo "IITM_PATH=$IITM_PATH"
 echo "CWD=$CWD"
 
 npm cache clean --force
@@ -100,20 +94,13 @@ popd > /dev/null
 # npm install && npm run compile && npm pack
 # popd > /dev/null
 
-# Build import-in-the-middle
-pushd "$IITM_PATH" > /dev/null
-rm -f import-in-the-middle-*.tgz
-npm install && npm pack
-popd > /dev/null
-
 # Install forked libraries in cx-wrapper
 pushd "./nodejs/packages/cx-wrapper" > /dev/null
 npm install \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-lambda/opentelemetry-instrumentation-aws-lambda-*.tgz \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-mongodb/opentelemetry-instrumentation-mongodb-*.tgz \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-sdk/opentelemetry-instrumentation-aws-sdk-*.tgz \
-    "${OPENTELEMETRY_JS_PATH}"/experimental/packages/opentelemetry-instrumentation/opentelemetry-instrumentation-*.tgz \
-    "${IITM_PATH}"/import-in-the-middle-*.tgz
+    "${OPENTELEMETRY_JS_PATH}"/experimental/packages/opentelemetry-instrumentation/opentelemetry-instrumentation-*.tgz
 popd > /dev/null
 
 # Build cx-wrapper
@@ -129,7 +116,6 @@ npm install \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-mongodb/opentelemetry-instrumentation-mongodb-*.tgz \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-sdk/opentelemetry-instrumentation-aws-sdk-*.tgz \
     "${OPENTELEMETRY_JS_PATH}"/experimental/packages/opentelemetry-instrumentation/opentelemetry-instrumentation-*.tgz \
-    "${IITM_PATH}"/import-in-the-middle-*.tgz \
     "${CWD}"/nodejs/packages/cx-wrapper/cx-wrapper-*.tgz
 popd > /dev/null
 
