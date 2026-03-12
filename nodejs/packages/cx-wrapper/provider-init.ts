@@ -3,9 +3,9 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { awsLambdaDetector } from '@opentelemetry/resource-detector-aws';
-import { detectResourcesSync, envDetector, processDetector } from '@opentelemetry/resources';
+import { detectResources, envDetector, processDetector } from '@opentelemetry/resources';
 import { MeterProvider, MeterProviderOptions, PeriodicExportingMetricReader, AggregationTemporality } from '@opentelemetry/sdk-metrics';
-import { BatchSpanProcessor, ConsoleSpanExporter, SDKRegistrationConfig, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { BatchSpanProcessor, ConsoleSpanExporter, SDKRegistrationConfig, SimpleSpanProcessor, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { NodeTracerConfig, NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { parseBooleanEnvvar, parseIntEnvvar } from './common';
 
@@ -27,7 +27,7 @@ export function initializeProvider(instrumentations: any[]): NodeTracerProvider 
 
   const export_timeout = parseIntEnvvar("OTEL_EXPORT_TIMEOUT") ?? DEFAULT_OTEL_EXPORT_TIMEOUT;
 
-  const resource = detectResourcesSync({
+  const resource = detectResources({
     detectors: [awsLambdaDetector, envDetector, processDetector],
   });
 
@@ -43,14 +43,7 @@ export function initializeProvider(instrumentations: any[]): NodeTracerProvider 
   process.env.OTEL_TRACES_EXPORTER = 'none';
   process.env.OTEL_EXPORTER_OTLP_COMPRESSION = 'none';
 
-  const tracerProvider = new NodeTracerProvider(config);
-  /*
-  if (typeof configureTracerProvider === 'function') {
-    configureTracerProvider(tracerProvider)
-  } else {
-    // defaults
-  */
-  tracerProvider.addSpanProcessor(
+  const spanProcessors: SpanProcessor[] = [
     new BatchSpanProcessor(
       new OTLPTraceExporter({
         timeoutMillis: export_timeout,
@@ -58,17 +51,17 @@ export function initializeProvider(instrumentations: any[]): NodeTracerProvider 
       {
         scheduledDelayMillis: 2147483647, // 24 days should be enough to outlive a lambda instance
       }
-    )
-  );
-  /*
-  }
-  */
+    ),
+  ];
 
   if (parseBooleanEnvvar("OTEL_CONSOLE_SPAN_EXPORTER_ENABLED") ?? false) {
-    tracerProvider.addSpanProcessor(
-      new SimpleSpanProcessor(new ConsoleSpanExporter())
-    );
+    spanProcessors.push(new SimpleSpanProcessor(new ConsoleSpanExporter()));
   }
+
+  const tracerProvider = new NodeTracerProvider({
+    ...config,
+    spanProcessors,
+  });
 
   let sdkRegistrationConfig: SDKRegistrationConfig = {};
   if (typeof configureSdkRegistration === 'function') {

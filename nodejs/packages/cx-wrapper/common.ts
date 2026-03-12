@@ -1,6 +1,4 @@
-import { getEnv } from '@opentelemetry/core';
-
-export const logLevel = getEnv().OTEL_LOG_LEVEL;
+export const logLevel = process.env.OTEL_LOG_LEVEL;
   
 export const OtelAttributes = {
     RPC_REQUEST_PAYLOAD: 'rpc.request.payload',

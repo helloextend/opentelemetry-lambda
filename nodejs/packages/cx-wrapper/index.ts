@@ -1,8 +1,12 @@
-import { diag, DiagConsoleLogger } from '@opentelemetry/api';
-import { getEnv } from '@opentelemetry/core';
+import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 
 // configure lambda logging (before we load libraries that might log)
-diag.setLogger(new DiagConsoleLogger(), getEnv().OTEL_LOG_LEVEL);
+const envLogLevel = process.env.OTEL_LOG_LEVEL?.toUpperCase();
+const diagLogLevel =
+  envLogLevel && envLogLevel in DiagLogLevel
+    ? (DiagLogLevel[envLogLevel as keyof typeof DiagLogLevel] as DiagLogLevel)
+    : undefined;
+diag.setLogger(new DiagConsoleLogger(), diagLogLevel);
 
 import { Callback, Context } from 'aws-lambda';
 import { Handler } from 'aws-lambda/handler.js';
