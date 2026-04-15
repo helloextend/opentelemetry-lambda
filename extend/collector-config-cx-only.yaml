@@ -1,0 +1,66 @@
+# Extend OTel Lambda collector config — Coralogix-only export.
+#
+# Default config used when a service has NOT opted in to Arize tracing.
+# Maintains parity with the existing CX-managed layer behavior.
+#
+# Required env vars (set by extend-cdk-lib NodeLambdaBuilder):
+#   CX_SECRET        — Coralogix API key secret name/ARN
+#   CX_APPLICATION   — Coralogix application tag
+#   CX_SUBSYSTEM     — Coralogix subsystem tag
+#
+# Optional:
+#   CX_ENDPOINT      — default otel-traces.coralogix.com:443
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: localhost:4317
+      http:
+        endpoint: localhost:4318
+  telemetryapi:
+
+processors:
+  batch:
+    timeout: 1s
+  decouple:
+
+exporters:
+  otlp/coralogix:
+    endpoint: ${env:CX_ENDPOINT:-otel-traces.coralogix.com:443}
+    headers:
+      Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
+      CX-Application-Name: ${env:CX_APPLICATION}
+      CX-Subsystem-Name: ${env:CX_SUBSYSTEM}
+
+  otlp/coralogix_metrics:
+    endpoint: otel-metrics.coralogix.com:443
+    headers:
+      Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
+      CX-Application-Name: ${env:CX_APPLICATION}
+      CX-Subsystem-Name: ${env:CX_SUBSYSTEM}
+
+  otlp/coralogix_logs:
+    endpoint: otel-logs.coralogix.com:443
+    headers:
+      Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
+      CX-Application-Name: ${env:CX_APPLICATION}
+      CX-Subsystem-Name: ${env:CX_SUBSYSTEM}
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, decouple]
+      exporters: [otlp/coralogix]
+    metrics:
+      receivers: [otlp]
+      processors: [batch, decouple]
+      exporters: [otlp/coralogix_metrics]
+    logs:
+      receivers: [otlp, telemetryapi]
+      processors: [batch, decouple]
+      exporters: [otlp/coralogix_logs]
+  telemetry:
+    metrics:
+      address: localhost:8888

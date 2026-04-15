@@ -1,0 +1,99 @@
+# Extend OTel Lambda collector config — dual export to Coralogix + Arize + S3 archival.
+#
+# Consumed by services that integrate Arize tracing. Selected via the
+# OPENTELEMETRY_COLLECTOR_CONFIG_URI env var set by extend-cdk-lib
+# NodeLambdaBuilder when `arizeTracingProps` is provided.
+#
+# Secret resolution is native: `${secretsmanager:<name-or-arn>}` is expanded
+# at collector startup by the secretsmanagerprovider confmap provider
+# (registered in collector/internal/collector/collector.go:77).
+#
+# Required env vars (set by extend-cdk-lib):
+#   CX_SECRET                — Coralogix API key secret name/ARN
+#   CX_APPLICATION           — Coralogix application tag (AWS account env name)
+#   CX_SUBSYSTEM             — Coralogix subsystem tag (service name)
+#   ARIZE_API_KEY_SECRET     — Arize OTel API key secret name/ARN
+#   ARIZE_SPACE_ID           — Arize space ID (Relay global ID)
+#   ARIZE_PROJECT_NAME       — Arize project name
+#   ARIZE_S3_BUCKET_NAME     — S3 bucket for archival
+#   AWS_REGION               — provided by Lambda runtime
+#
+# Optional:
+#   CX_ENDPOINT              — default otel-traces.coralogix.com:443
+#   ARIZE_COLLECTOR_ENDPOINT — default otlp.arize.com:443 (gRPC)
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: localhost:4317
+      http:
+        endpoint: localhost:4318
+  telemetryapi:
+
+processors:
+  batch:
+    timeout: 1s
+  decouple:
+
+exporters:
+  # Coralogix — OTLP gRPC to CX traces endpoint
+  otlp/coralogix:
+    endpoint: ${env:CX_ENDPOINT:-otel-traces.coralogix.com:443}
+    headers:
+      Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
+      CX-Application-Name: ${env:CX_APPLICATION}
+      CX-Subsystem-Name: ${env:CX_SUBSYSTEM}
+
+  # Coralogix — metrics endpoint
+  otlp/coralogix_metrics:
+    endpoint: otel-metrics.coralogix.com:443
+    headers:
+      Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
+      CX-Application-Name: ${env:CX_APPLICATION}
+      CX-Subsystem-Name: ${env:CX_SUBSYSTEM}
+
+  # Coralogix — logs endpoint
+  otlp/coralogix_logs:
+    endpoint: otel-logs.coralogix.com:443
+    headers:
+      Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
+      CX-Application-Name: ${env:CX_APPLICATION}
+      CX-Subsystem-Name: ${env:CX_SUBSYSTEM}
+
+  # Arize — OTLP gRPC (default transport per Arize docs)
+  # https://arize.com/docs/ax/integrations/opentelemetry/opentelemetry-arize-otel
+  otlp/arize:
+    endpoint: ${env:ARIZE_COLLECTOR_ENDPOINT:-otlp.arize.com:443}
+    headers:
+      api_key: ${secretsmanager:${env:ARIZE_API_KEY_SECRET}}
+      space_id: ${env:ARIZE_SPACE_ID}
+      project_name: ${env:ARIZE_PROJECT_NAME}
+
+  # S3 archival — partitioned OTLP JSON
+  awss3:
+    s3uploader:
+      region: ${env:AWS_REGION}
+      s3_bucket: ${env:ARIZE_S3_BUCKET_NAME}
+      s3_prefix: traces/${env:CX_APPLICATION}/${env:CX_SUBSYSTEM}
+      s3_partition: minute
+      compression: gzip
+    marshaler: otlp_json
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, decouple]
+      exporters: [otlp/coralogix, otlp/arize, awss3]
+    metrics:
+      receivers: [otlp]
+      processors: [batch, decouple]
+      exporters: [otlp/coralogix_metrics]
+    logs:
+      receivers: [otlp, telemetryapi]
+      processors: [batch, decouple]
+      exporters: [otlp/coralogix_logs]
+  telemetry:
+    metrics:
+      address: localhost:8888
