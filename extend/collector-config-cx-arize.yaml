@@ -1,12 +1,7 @@
-# Extend OTel Lambda collector config — dual export to Coralogix + Arize + S3 archival.
+# Extend OTel Lambda collector config — dual export to Coralogix + Arize (no S3 archival).
 #
-# Consumed by services that integrate Arize tracing. Selected via the
-# OPENTELEMETRY_COLLECTOR_CONFIG_URI env var set by extend-cdk-lib
-# NodeLambdaBuilder when `arizeTracingProps` is provided.
-#
-# Secret resolution is native: `${secretsmanager:<name-or-arn>}` is expanded
-# at collector startup by the secretsmanagerprovider confmap provider
-# (registered in collector/internal/collector/collector.go:77).
+# Selected via OPENTELEMETRY_COLLECTOR_CONFIG_URI when arizeTracingProps is
+# provided WITHOUT s3Archival. For CX+Arize+S3 see collector-config-cx-arize-s3.yaml.
 #
 # Required env vars (set by extend-cdk-lib):
 #   CX_SECRET                — Coralogix API key secret name/ARN
@@ -15,13 +10,10 @@
 #   ARIZE_API_KEY_SECRET     — Arize OTel API key secret name/ARN
 #   ARIZE_SPACE_ID           — Arize space ID (Relay global ID)
 #   ARIZE_PROJECT_NAME       — Arize project name
-#   ARIZE_S3_BUCKET_NAME     — S3 bucket for archival
-#   AWS_REGION               — provided by Lambda runtime
 #
 # Optional:
 #   CX_ENDPOINT              — default otel-traces.coralogix.com:443
 #   ARIZE_COLLECTOR_ENDPOINT — default otlp.arize.com:443 (gRPC)
-#   ARIZE_S3_PREFIX          — default traces/${CX_APPLICATION}/${CX_SUBSYSTEM}
 
 receivers:
   otlp:
@@ -71,22 +63,12 @@ exporters:
       space_id: ${env:ARIZE_SPACE_ID}
       project_name: ${env:ARIZE_PROJECT_NAME}
 
-  # S3 archival — partitioned OTLP JSON
-  awss3:
-    s3uploader:
-      region: ${env:AWS_REGION}
-      s3_bucket: ${env:ARIZE_S3_BUCKET_NAME}
-      s3_prefix: ${env:ARIZE_S3_PREFIX:-traces/${env:CX_APPLICATION}/${env:CX_SUBSYSTEM}}
-      s3_partition: minute
-      compression: gzip
-    marshaler: otlp_json
-
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch, decouple]
-      exporters: [otlp/coralogix, otlp/arize, awss3]
+      exporters: [otlp/coralogix, otlp/arize]
     metrics:
       receivers: [otlp]
       processors: [batch, decouple]
