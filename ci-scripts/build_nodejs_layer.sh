@@ -8,17 +8,9 @@ if [ -z "${OPENTELEMETRY_JS_CONTRIB_PATH:-}" ]; then
 fi
 OPENTELEMETRY_JS_CONTRIB_PATH=$(realpath "$OPENTELEMETRY_JS_CONTRIB_PATH")
 
-if [ -z "${OPENTELEMETRY_JS_PATH:-}" ]; then
-    echo "OPENTELEMETRY_JS_PATH is not set"
-    exit 1
-fi
-OPENTELEMETRY_JS_PATH=$(realpath "$OPENTELEMETRY_JS_PATH")
-
-
 CWD=$(pwd)
 
 echo "OPENTELEMETRY_JS_CONTRIB_PATH=$OPENTELEMETRY_JS_CONTRIB_PATH"
-echo "OPENTELEMETRY_JS_PATH=$OPENTELEMETRY_JS_PATH"
 echo "CWD=$CWD"
 
 npm cache clean --force
@@ -69,38 +61,12 @@ rm -f opentelemetry-instrumentation-aws-sdk-*.tgz
 npm install --ignore-scripts && npm run compile && npm pack --ignore-scripts
 popd > /dev/null
 
-# Prepare opentelemetry-js
-pushd "$OPENTELEMETRY_JS_PATH" > /dev/null
-npm install
-# Generate version files in opentelemetry-js (required for TypeScript compilation)
-npx nx run-many -t version
-popd > /dev/null
-
-# Build sdk-logs
-pushd "$OPENTELEMETRY_JS_PATH/experimental/packages/sdk-logs" > /dev/null
-npm install && npm run compile
-popd > /dev/null
-
-# Build opentelemetry-instrumentation
-pushd "$OPENTELEMETRY_JS_PATH/experimental/packages/opentelemetry-instrumentation" > /dev/null
-rm -f opentelemetry-instrumentation-*.tgz
-npm install && npm run compile && npm pack
-ls -lah opentelemetry-instrumentation-*.tgz
-popd > /dev/null
-
-# Build opentelemetry-sdk-trace-base
-# pushd $OPENTELEMETRY_JS_PATH/packages/opentelemetry-sdk-trace-base
-# rm -f opentelemetry-sdk-trace-base-*.tgz
-# npm install && npm run compile && npm pack
-# popd > /dev/null
-
 # Install forked libraries in cx-wrapper
 pushd "./nodejs/packages/cx-wrapper" > /dev/null
 npm install \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-lambda/opentelemetry-instrumentation-aws-lambda-*.tgz \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-mongodb/opentelemetry-instrumentation-mongodb-*.tgz \
-    "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-sdk/opentelemetry-instrumentation-aws-sdk-*.tgz \
-    "${OPENTELEMETRY_JS_PATH}"/experimental/packages/opentelemetry-instrumentation/opentelemetry-instrumentation-*.tgz
+    "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-sdk/opentelemetry-instrumentation-aws-sdk-*.tgz
 popd > /dev/null
 
 # Build cx-wrapper
@@ -115,7 +81,6 @@ npm install \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-lambda/opentelemetry-instrumentation-aws-lambda-*.tgz \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-mongodb/opentelemetry-instrumentation-mongodb-*.tgz \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-sdk/opentelemetry-instrumentation-aws-sdk-*.tgz \
-    "${OPENTELEMETRY_JS_PATH}"/experimental/packages/opentelemetry-instrumentation/opentelemetry-instrumentation-*.tgz \
     "${CWD}"/nodejs/packages/cx-wrapper/cx-wrapper-*.tgz
 popd > /dev/null
 
