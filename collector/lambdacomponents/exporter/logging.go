@@ -14,15 +14,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// loggingexporter was removed after v0.110.0; replaced by debugexporter.
 package exporter
 
 import (
 	"go.opentelemetry.io/collector/exporter"
-	"go.opentelemetry.io/collector/exporter/loggingexporter"
+	"go.opentelemetry.io/collector/exporter/debugexporter"
 )
 
 func init() {
 	Factories = append(Factories, func(extensionId string) exporter.Factory {
-		return loggingexporter.NewFactory()
+		return debugexporter.NewFactory()
 	})
 }

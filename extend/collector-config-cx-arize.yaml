@@ -23,7 +23,7 @@
 #                              fallback for inbound space_id header)
 #
 # Optional:
-#   CX_ENDPOINT              — default otel-traces.coralogix.com:443
+#   CX_ENDPOINT              — default ingress.us2.coralogix.com:443
 #   ARIZE_COLLECTOR_ENDPOINT — default otlp.arize.com:443 (gRPC)
 
 extensions:
@@ -65,25 +65,9 @@ processors:
   decouple:
 
 exporters:
-  # Coralogix — OTLP gRPC to CX traces endpoint
+  # Coralogix — unified OTLP gRPC ingress endpoint (traces, metrics, logs)
   otlp/coralogix:
-    endpoint: ${env:CX_ENDPOINT:-otel-traces.coralogix.com:443}
-    headers:
-      Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
-      CX-Application-Name: ${env:CX_APPLICATION}
-      CX-Subsystem-Name: ${env:CX_SUBSYSTEM}
-
-  # Coralogix — metrics endpoint
-  otlp/coralogix_metrics:
-    endpoint: otel-metrics.coralogix.com:443
-    headers:
-      Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
-      CX-Application-Name: ${env:CX_APPLICATION}
-      CX-Subsystem-Name: ${env:CX_SUBSYSTEM}
-
-  # Coralogix — logs endpoint
-  otlp/coralogix_logs:
-    endpoint: otel-logs.coralogix.com:443
+    endpoint: ${env:CX_ENDPOINT:-ingress.us2.coralogix.com:443}
     headers:
       Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
       CX-Application-Name: ${env:CX_APPLICATION}
@@ -111,11 +95,11 @@ service:
     metrics:
       receivers: [otlp]
       processors: [batch, decouple]
-      exporters: [otlp/coralogix_metrics]
+      exporters: [otlp/coralogix]
     logs:
       receivers: [otlp, telemetryapi]
       processors: [batch, decouple]
-      exporters: [otlp/coralogix_logs]
+      exporters: [otlp/coralogix]
   telemetry:
     metrics:
       address: localhost:8888
