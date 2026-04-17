@@ -3,17 +3,44 @@
 # Selected via OPENTELEMETRY_COLLECTOR_CONFIG_URI when arizeTracingProps is
 # provided WITHOUT s3Archival. For CX+Arize+S3 see collector-config-cx-arize-s3.yaml.
 #
+# Trace pipelines are split:
+#   traces        — standard OTLP spans on 4317/4318 → Coralogix
+#   traces/mastra — Mastra AI OTLP spans on 4319/4320 → Arize
+#
+# Arize credentials ride inbound on the 4319/4320 receivers as OTLP headers
+# (api_key, space_id, project_name) and are forwarded upstream via the
+# headers_setter extension. api_key/space_id fall back to collector env/secret;
+# project_name must come from the Lambda (consumers register N projects per
+# service, one env var can't serve N).
+#
 # Required env vars (set by extend-cdk-lib):
 #   CX_SECRET                — Coralogix API key secret name/ARN
 #   CX_APPLICATION           — Coralogix application tag (AWS account env name)
 #   CX_SUBSYSTEM             — Coralogix subsystem tag (service name)
-#   ARIZE_API_KEY_SECRET     — Arize OTel API key secret name/ARN
-#   ARIZE_SPACE_ID           — Arize space ID (Relay global ID)
-#   ARIZE_PROJECT_NAME       — Arize project name
+#   ARIZE_API_KEY_SECRET     — Arize OTel API key secret name/ARN (also used as
+#                              collector-side fallback for inbound api_key header)
+#   ARIZE_SPACE_ID           — Arize space ID (also used as collector-side
+#                              fallback for inbound space_id header)
 #
 # Optional:
 #   CX_ENDPOINT              — default otel-traces.coralogix.com:443
 #   ARIZE_COLLECTOR_ENDPOINT — default otlp.arize.com:443 (gRPC)
+
+extensions:
+  headers_setter:
+    headers:
+      - action: upsert
+        key: api_key
+        from_context: api_key
+        default_value: ${secretsmanager:${env:ARIZE_API_KEY_SECRET}}
+      - action: upsert
+        key: space_id
+        from_context: space_id
+        default_value: ${env:ARIZE_SPACE_ID}
+      - action: upsert
+        key: project_name
+        from_context: project_name
+        # no default — must come from the Lambda
 
 receivers:
   otlp:
@@ -22,6 +49,14 @@ receivers:
         endpoint: localhost:4317
       http:
         endpoint: localhost:4318
+  otlp/mastra:
+    protocols:
+      grpc:
+        endpoint: localhost:4319
+        include_metadata: true
+      http:
+        endpoint: localhost:4320
+        include_metadata: true
   telemetryapi:
 
 processors:
@@ -56,19 +91,23 @@ exporters:
 
   # Arize — OTLP gRPC (default transport per Arize docs)
   # https://arize.com/docs/ax/integrations/opentelemetry/opentelemetry-arize-otel
+  # headers_setter supplies api_key / space_id / project_name per request.
   otlp/arize:
     endpoint: ${env:ARIZE_COLLECTOR_ENDPOINT:-otlp.arize.com:443}
-    headers:
-      api_key: ${secretsmanager:${env:ARIZE_API_KEY_SECRET}}
-      space_id: ${env:ARIZE_SPACE_ID}
-      project_name: ${env:ARIZE_PROJECT_NAME}
+    auth:
+      authenticator: headers_setter
 
 service:
+  extensions: [headers_setter]
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch, decouple]
-      exporters: [otlp/coralogix, otlp/arize]
+      exporters: [otlp/coralogix]
+    traces/mastra:
+      receivers: [otlp/mastra]
+      processors: [batch, decouple]
+      exporters: [otlp/arize]
     metrics:
       receivers: [otlp]
       processors: [batch, decouple]

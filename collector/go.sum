@@ -225,6 +225,10 @@ github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awss3exporter
 github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awss3exporter v0.150.0/go.mod h1:67FJXUfds/OXpKAZ6FDUeN9JXUJqfeFBXUyc2YqlMWA=
 github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.109.0 h1:3pOBB7MIHs0CempWSjZLekRKt9Oc3OO2lr2eE7R/IeQ=
 github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.109.0/go.mod h1:keP8lTqP228+Bj2C0we9/risZU3jMxI1vS9L5fkyxoE=
+github.com/open-telemetry/opentelemetry-collector-contrib/extension/headerssetterextension v0.150.0 h1:KLQv93WapOZK9pDA4cL/usMQxVcTu6WlG0EPwA0zgUs=
+github.com/open-telemetry/opentelemetry-collector-contrib/extension/headerssetterextension v0.150.0/go.mod h1:XAQyALiM1kP9YI5MFAVLujW4zSSfZrPzojzc5lDZ2FY=
+github.com/open-telemetry/opentelemetry-collector-contrib/extension/internal/credentialsfile v0.150.0 h1:lw1/8T5k7JH3RRHATYqXVtPgmn483wmRp19rDgZivNU=
+github.com/open-telemetry/opentelemetry-collector-contrib/extension/internal/credentialsfile v0.150.0/go.mod h1:neAzGFqd93Rg4m1DDJm9rAWg0+0Jk76fHXHgzAfczgM=
 github.com/open-telemetry/opentelemetry-collector-contrib/extension/sigv4authextension v0.109.0 h1:wXorKr/8dt2A1x0DGW+Uh53sX1ERdJp6IUMmUaagR20=
 github.com/open-telemetry/opentelemetry-collector-contrib/extension/sigv4authextension v0.109.0/go.mod h1:3riREDwyXx+8g+IK27BaqVxMqRaGU6jpeBZ+RPNBB0w=
 github.com/open-telemetry/opentelemetry-collector-contrib/internal/common v0.109.0 h1:3a/Y3/uaLVdu/1QHjxgaCZu8dI6VLffI9N6j80oiAbw=
@@ -461,6 +465,8 @@ go.opentelemetry.io/collector/extension/auth v0.109.0 h1:yKUMCUG3IkjuOnHriNj0nqF
 go.opentelemetry.io/collector/extension/auth v0.109.0/go.mod h1:wOIv49JhXIfol8CRmQvLve05ft3nZQUnTfcnuZKxdbo=
 go.opentelemetry.io/collector/extension/experimental/storage v0.109.0 h1:kIJiOXHHBgMCvuDNA602dS39PJKB+ryiclLE3V5DIvM=
 go.opentelemetry.io/collector/extension/experimental/storage v0.109.0/go.mod h1:6cGr7MxnF72lAiA7nbkSC8wnfIk+L9CtMzJWaaII9vs=
+go.opentelemetry.io/collector/extension/extensionauth v1.56.0 h1:w+SjfUd38NGKZfL0QsrW4bke5jVkZdtMD+6scHW5K+0=
+go.opentelemetry.io/collector/extension/extensionauth v1.56.0/go.mod h1:iXhR9e5eC2XbdDf/Z17QJIV+wQx1E5DTth2oE3MmVMA=
 go.opentelemetry.io/collector/extension/extensioncapabilities v0.109.0 h1:gwLiFySAlYvaaITqmF3EkblrxwcfaDxntUmflf3YdrA=
 go.opentelemetry.io/collector/extension/extensioncapabilities v0.109.0/go.mod h1:4zf6xx0Qtv9OHJg599Ah48URgpNCPP6tiSakwIRcRfk=
 go.opentelemetry.io/collector/extension/extensioncapabilities v0.150.0 h1:8R7+oocYCmUKJ57mB49wcSBHkxv1npXFd2HYyc/a41Q=
