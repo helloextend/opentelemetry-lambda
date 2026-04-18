@@ -43,7 +43,7 @@ Required env vars:
 
 ## Build (pending workflow setup)
 
-Follows upstream: `./ci-scripts/build_nodejs_layer.sh` — requires a sibling checkout of `coralogix/opentelemetry-js-contrib` (branch `coralogix-autoinstrumentation`) set via `OPENTELEMETRY_JS_CONTRIB_PATH`. See `.github/workflows/publish-nodejs.yml` for the published flow.
+Follows upstream: `./scripts/build_nodejs_layer.sh` — requires a sibling checkout of `coralogix/opentelemetry-js-contrib` (branch `coralogix-autoinstrumentation`) set via `OPENTELEMETRY_JS_CONTRIB_PATH`. See `.github/workflows/publish-nodejs.yml` for the published flow.
 
 **Extend-specific follow-ups** (tracked in DEVOPS-2394):
 - [ ] Add GitHub Actions workflow to publish to Extend AWS accounts

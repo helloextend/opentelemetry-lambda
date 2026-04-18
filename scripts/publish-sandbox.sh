@@ -40,7 +40,7 @@ echo "==> building collector ($ARCH)"
 make -C collector package-extend GOARCH="$ARCH"
 
 echo "==> building nodejs layer"
-./ci-scripts/build_nodejs_layer.sh
+./scripts/build_nodejs_layer.sh
 
 echo "==> merging zips"
 rm -rf build-sandbox && mkdir -p build-sandbox/out

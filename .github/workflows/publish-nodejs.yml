@@ -43,12 +43,12 @@ jobs:
       with:
         node-version: 20
     - name: Build
-      run: ./ci-scripts/build_nodejs_layer.sh
+      run: ./scripts/build_nodejs_layer.sh
     - name: Check layer size
       env:
         FILE_PATH: ./nodejs/packages/layer/build/layer.zip
         MAX_SIZE: 9437184 # 9MB
-      run: ./ci-scripts/check_size.sh
+      run: ./scripts/check_size.sh
     - uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ vars.SIGNER_AWS_ACCESS_KEY_ID }}
@@ -105,4 +105,4 @@ jobs:
       env:
         LAYER_NAME: "coralogix-opentelemetry-nodejs-wrapper"
         COMPATIBLE_RUNTIMES: "nodejs18.x nodejs20.x nodejs22.x nodejs24.x"
-      run: ./ci-scripts/publish_${{ inputs.environment }}.sh
+      run: ./scripts/publish_${{ inputs.environment }}.sh

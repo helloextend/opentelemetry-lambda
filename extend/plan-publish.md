@@ -86,7 +86,7 @@ package-extend: build
 
 ### 4. Node.js wrapper build — reuse upstream script
 
-`ci-scripts/build_nodejs_layer.sh` already builds `nodejs/packages/layer/build/layer.zip`. Needs sibling checkouts + env vars (see `publish-nodejs.yml:17-43`):
+`scripts/build_nodejs_layer.sh` already builds `nodejs/packages/layer/build/layer.zip`. Needs sibling checkouts + env vars (see `publish-nodejs.yml:17-43`):
 
 - `OPENTELEMETRY_JS_CONTRIB_PATH` → `coralogix/opentelemetry-js-contrib@coralogix-autoinstrumentation`
 - `OPENTELEMETRY_JS_PATH` → `coralogix/opentelemetry-js@coralogix-autoinstrumentation`
@@ -123,7 +123,7 @@ on:
       - 'collector/**'
       - 'nodejs/**'
       - 'extend/**'
-      - 'ci-scripts/**'
+      - 'scripts/**'
       - '.github/workflows/publish-extend-otel-layer.yml'
   workflow_dispatch:
 
@@ -163,11 +163,11 @@ jobs:
         with: { repository: coralogix/import-in-the-middle,     ref: coralogix-autoinstrumentation, path: import-in-the-middle }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - run: ./ci-scripts/build_nodejs_layer.sh
+      - run: ./scripts/build_nodejs_layer.sh
       - env:
           FILE_PATH: ./nodejs/packages/layer/build/layer.zip
           MAX_SIZE: 9437184
-        run: ./ci-scripts/check_size.sh
+        run: ./scripts/check_size.sh
       - uses: actions/upload-artifact@v4
         with:
           name: nodejs-layer
@@ -212,14 +212,14 @@ No `add-layer-version-permission` step — layer stays private.
 
 ### 7. Size gate
 
-`ci-scripts/check_size.sh` runs inside `build-nodejs` (9 MB cap on nodejs zip, upstream default). Lambda layer hard limit is 250 MB unzipped across all layers — collector binary ~30-50 MB + nodejs ~9 MB leaves ample headroom.
+`scripts/check_size.sh` runs inside `build-nodejs` (9 MB cap on nodejs zip, upstream default). Lambda layer hard limit is 250 MB unzipped across all layers — collector binary ~30-50 MB + nodejs ~9 MB leaves ample headroom.
 
 ## Verification
 
 End-to-end, on a throwaway branch:
 
 1. **Local build per arch** — `make -C collector package-extend GOARCH=amd64` and `GOARCH=arm64`; inspect `build/opentelemetry-collector-layer-*.zip` has `extensions/collector` binary + all 3 configs in `collector-config/` with `config.yaml` as cx-only contents
-2. **Local nodejs build** — clone the 3 coralogix forks as siblings, run `./ci-scripts/build_nodejs_layer.sh`, confirm `nodejs/packages/layer/build/layer.zip` ≤ 9 MB and contains `nodejs/node_modules/` + `otel-handler`
+2. **Local nodejs build** — clone the 3 coralogix forks as siblings, run `./scripts/build_nodejs_layer.sh`, confirm `nodejs/packages/layer/build/layer.zip` ≤ 9 MB and contains `nodejs/node_modules/` + `otel-handler`
 3. **Workflow dry-run** — push to a throwaway branch, trigger `workflow_dispatch`, confirm `build-collector` + `build-nodejs` succeed and artifacts upload
 4. **Publish dry-run** — temporarily scope `package-and-publish` to a single arch/region, confirm `LayerVersionArn` prints in the job log and `aws lambda list-layer-versions --layer-name extend-otel-lambda-arm64 --region us-east-1` shows the version
 5. **Consumer smoke** — wire one low-traffic Lambda via `extend-cdk-lib` `NodeLambdaBuilder` to the new layer ARN, confirm traces land in CX (cx-only) and Arize + S3 (cx-arize-s3)

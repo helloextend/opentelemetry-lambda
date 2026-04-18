@@ -18,7 +18,7 @@ if [ -z "${AWS_PROFILE:-}" ]; then
     echo "AWS_PROFILE not set, using default: $AWS_PROFILE"
 fi
 
-"$ROOT_DIR/dev/build-nodejs.sh"
+"$ROOT_DIR/scripts/build-nodejs.sh"
 
 output=$(aws lambda publish-layer-version \
   --layer-name "$LAMBDA_LAYER_PREFIX-coralogix-opentelemetry-nodejs-wrapper-development" \
