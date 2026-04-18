@@ -21,7 +21,7 @@ Plan scope: build + publish pipeline only. Consumer wiring (`extend-cdk-lib` `No
 | Architectures | amd64 + arm64 | Both required by consumers |
 | Regions | us-east-1, us-west-2 | Matches Extend's current Lambda footprint |
 | AWS account | 159581800400 (shared root) | Same as helloextend/layers |
-| Auth | GitHub OIDC → `PROD_LAMBDA_ROLE_ARN` | Reuses existing `.github/workflows/layer-publish.yml` |
+| Auth | GitHub OIDC → `PROD_LAMBDA_ROLE_ARN` | Reuses existing publish workflow pattern |
 | Trigger | Push to `main` | Simplest versioning; no tags needed |
 | Runners | Blacksmith (`blacksmith-2vcpu-ubuntu-2404`) | Extend standard |
 | Node.js wrapper source | Coralogix forks (public; no PAT) | `opentelemetry-js-contrib` + `opentelemetry-js` @ `coralogix-autoinstrumentation`; + `coralogix/import-in-the-middle` |
@@ -38,7 +38,7 @@ Plan scope: build + publish pipeline only. Consumer wiring (`extend-cdk-lib` `No
 Already landed on branch:
 - `extend/collector-config-cx-only.yaml`, `collector-config-cx-arize.yaml`, `collector-config-cx-arize-s3.yaml`
 - `extend/README.md` with consumer contract
-- Upstream's reusable `layer-publish.yml` (OIDC, `PROD_LAMBDA_ROLE_ARN`, `configure-aws-credentials@v4`) — **reuse, don't duplicate**
+- Upstream's reusable publish workflow pattern (OIDC, `PROD_LAMBDA_ROLE_ARN`, `configure-aws-credentials@v4`) — **reuse, don't duplicate**
 - `collector/Makefile` `package` target already globs `config*` into `build/collector-config/` and zips with binary
 
 Outstanding (blockers):
