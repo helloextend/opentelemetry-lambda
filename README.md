@@ -21,7 +21,7 @@ The collector extension (in `collector/`) is language-agnostic and powers both N
 | `nodejs/` | Node.js wrapper + cx-wrapper package |
 | `python/` | Python wrapper |
 | `scripts/` | Build & dev scripts (`build_nodejs_layer.sh`, `publish-sandbox.sh`, `check_size.sh`, `build-nodejs.sh`, `deploy-nodejs.sh`) |
-| `.github/workflows/publish-extend-otel-layer.yml` | Publish pipeline (Node.js layer today) |
+| `.github/workflows/publish-extend-otel-layer.yml` | Extend publish pipeline (Node.js + collector layer) |
 | `UPSTREAM.md` | Fork point + upstream sync status |
 
 ## Publishing

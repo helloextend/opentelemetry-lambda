@@ -86,7 +86,7 @@ package-extend: build
 
 ### 4. Node.js wrapper build — reuse upstream script
 
-`scripts/build_nodejs_layer.sh` already builds `nodejs/packages/layer/build/layer.zip`. Needs sibling checkouts + env vars (see `publish-nodejs.yml:17-43`):
+`scripts/build_nodejs_layer.sh` already builds `nodejs/packages/layer/build/layer.zip`. Needs sibling checkouts + env vars (see `publish-extend-otel-layer.yml` `build-nodejs` job):
 
 - `OPENTELEMETRY_JS_CONTRIB_PATH` → `coralogix/opentelemetry-js-contrib@coralogix-autoinstrumentation`
 - `OPENTELEMETRY_JS_PATH` → `coralogix/opentelemetry-js@coralogix-autoinstrumentation`
