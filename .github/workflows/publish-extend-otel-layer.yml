@@ -45,8 +45,10 @@ jobs:
       OPENTELEMETRY_JS_CONTRIB_PATH: ${{ github.workspace }}/opentelemetry-js-contrib
     steps:
       - uses: actions/checkout@v4
+      # Pinned SHA — bump when upstream cx-contrib lands a fix/feature we want.
+      # Keep in sync with CX_CONTRIB_SHA in ci-scripts/publish-sandbox.sh.
       - uses: actions/checkout@v4
-        with: { repository: coralogix/opentelemetry-js-contrib, ref: coralogix-autoinstrumentation, path: opentelemetry-js-contrib }
+        with: { repository: coralogix/opentelemetry-js-contrib, ref: 3a9691a699ddd06c3644eec70bf4b50cc4217ba3, path: opentelemetry-js-contrib }
       - uses: actions/setup-node@v4
         with:
           node-version: 22
