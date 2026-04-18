@@ -10,7 +10,7 @@ on:
       - 'collector/**'
       - 'nodejs/**'
       - 'extend/**'
-      - 'ci-scripts/**'
+      - 'scripts/**'
       - '.github/workflows/publish-extend-otel-layer.yml'
   workflow_dispatch:
 
@@ -46,7 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # Pinned SHA — bump when upstream cx-contrib lands a fix/feature we want.
-      # Keep in sync with CX_CONTRIB_SHA in ci-scripts/publish-sandbox.sh.
+      # Keep in sync with CX_CONTRIB_SHA in scripts/publish-sandbox.sh.
       - uses: actions/checkout@v4
         with: { repository: coralogix/opentelemetry-js-contrib, ref: 3a9691a699ddd06c3644eec70bf4b50cc4217ba3, path: opentelemetry-js-contrib }
       - uses: actions/setup-node@v4
@@ -54,11 +54,11 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: nodejs/packages/layer/package-lock.json
-      - run: ./ci-scripts/build_nodejs_layer.sh
+      - run: ./scripts/build_nodejs_layer.sh
       - env:
           FILE_PATH: ./nodejs/packages/layer/build/layer.zip
           MAX_SIZE: 9437184
-        run: ./ci-scripts/check_size.sh
+        run: ./scripts/check_size.sh
       - uses: actions/upload-artifact@v4
         with:
           name: nodejs-layer

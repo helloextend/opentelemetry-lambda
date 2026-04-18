@@ -40,19 +40,11 @@ To build the layer and sample applications run the command below from
 the root of the application:
 
 ```sh
-./dev/build-nodejs.sh
+./scripts/build-nodejs.sh
 ```
 
-This is a thin wrapper over `./ci-scripts/build_nodejs_layer.sh` that
+This is a thin wrapper over `./scripts/build_nodejs_layer.sh` that
 will clone the forked dependencies if the paths indicated by the
 previously mentioned environment variables are empty, then use
 that script to download all dependencies and compile all code.
 The layer zip file will be present at `./packages/layer/build/layer.zip`.
-
-## Sample applications
-
-Sample applications are provided to show usage of the above layer.
-
-- Application using AWS SDK - shows using the wrapper with an application using AWS SDK without code change.
-  - [Using layer built from source](./integration-tests/aws-sdk)
-  - [WIP] [Using OTel Public Layer](./sample-apps/aws-sdk)

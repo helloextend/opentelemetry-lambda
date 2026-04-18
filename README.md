@@ -20,15 +20,15 @@ The collector extension (in `collector/`) is language-agnostic and powers both N
 | `extend/` | Extend-specific collector configs + README for consumers |
 | `nodejs/` | Node.js wrapper + cx-wrapper package |
 | `python/` | Python wrapper |
-| `ci-scripts/` | Build scripts (`build_nodejs_layer.sh`, `publish-sandbox.sh`, `check_size.sh`) |
-| `.github/workflows/publish-extend-otel-layer.yml` | Publish pipeline (Node.js layer today) |
+| `scripts/` | Build & dev scripts (`build_nodejs_layer.sh`, `publish-sandbox.sh`, `check_size.sh`, `build-nodejs.sh`, `deploy-nodejs.sh`) |
+| `.github/workflows/publish-extend-otel-layer.yml` | Extend publish pipeline (Node.js + collector layer) |
 | `UPSTREAM.md` | Fork point + upstream sync status |
 
 ## Publishing
 
 **Production** — push to `main` triggers `publish-extend-otel-layer.yml`, which publishes `extend-nodejs-wrapper-and-exporter-{amd64,arm64}` to account 159581800400 in `us-east-1` and `us-west-2`, org-visible to all Extend AWS accounts.
 
-**Sandbox** — `./ci-scripts/publish-sandbox.sh {amd64|arm64}` publishes a private layer (`extend-nodejs-wrapper-and-exporter-sandbox-{arch}`) to the currently-authenticated account in `us-east-1`. Auto-clones the pinned `coralogix/opentelemetry-js-contrib` fork to `.build-cache/` on first run.
+**Sandbox** — `./scripts/publish-sandbox.sh {amd64|arm64}` publishes a private layer (`extend-nodejs-wrapper-and-exporter-sandbox-{arch}`) to the currently-authenticated account in `us-east-1`. Auto-clones the pinned `coralogix/opentelemetry-js-contrib` fork to `.build-cache/` on first run.
 
 ## Consumer wiring
 

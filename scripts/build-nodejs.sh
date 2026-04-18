@@ -29,7 +29,7 @@ if [ ! -d "$OPENTELEMETRY_JS_PATH" ]; then
 	git clone git@github.com:coralogix/opentelemetry-js.git "$OPENTELEMETRY_JS_PATH" -b coralogix-autoinstrumentation
 fi
 
-"$ROOT_DIR/ci-scripts/build_nodejs_layer.sh"
+"$ROOT_DIR/scripts/build_nodejs_layer.sh"
 
 # Useful for using the layer locally
 pushd "$ROOT_DIR/nodejs/packages/layer" >/dev/null
