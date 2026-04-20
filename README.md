@@ -8,9 +8,9 @@ Ticket: [DEVOPS-2394](https://helloextend.atlassian.net/browse/DEVOPS-2394).
 
 ## Scope
 
-This fork supports **Node.js** and **Python** runtimes only. Upstream's Java, .NET, Ruby, and Go Lambda layers have been removed — we don't ship them and don't need to track their CI.
+This fork ships **Node.js** Lambda layers only. Upstream's Python, Java, .NET, Ruby, and Go layers have been removed — we don't build them. If we need Python autoinstrumentation later, start from `origin/python-instrumentation` rather than reviving the upstream dir.
 
-The collector extension (in `collector/`) is language-agnostic and powers both Node.js and Python layers.
+The collector extension (in `collector/`) is language-agnostic.
 
 ## Layout
 
@@ -19,7 +19,6 @@ The collector extension (in `collector/`) is language-agnostic and powers both N
 | `collector/` | Go collector extension + Makefile (`package-extend` target) |
 | `extend/` | Extend-specific collector configs + README for consumers |
 | `nodejs/` | Node.js wrapper + cx-wrapper package |
-| `python/` | Python wrapper |
 | `scripts/` | Build & dev scripts (`build_nodejs_layer.sh`, `publish-sandbox.sh`, `check_size.sh`, `build-nodejs.sh`, `deploy-nodejs.sh`) |
 | `.github/workflows/publish-extend-otel-layer.yml` | Extend publish pipeline (Node.js + collector layer) |
 | `UPSTREAM.md` | Fork point + upstream sync status |
@@ -55,4 +54,4 @@ Tracked in [`UPSTREAM.md`](UPSTREAM.md). DEVOPS-2502: automate via a repo-level 
 
 ## Contributing
 
-Internal docs: [`extend/README.md`](extend/README.md), [`collector/README.md`](collector/README.md), [`nodejs/README.md`](nodejs/README.md), [`python/README.md`](python/README.md).
+Internal docs: [`extend/README.md`](extend/README.md), [`collector/README.md`](collector/README.md), [`nodejs/README.md`](nodejs/README.md).

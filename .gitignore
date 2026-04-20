@@ -31,3 +31,6 @@ build-sandbox/
 
 .envrc
 mise.toml
+
+.claude/worktrees/
+extend/plan-*.md

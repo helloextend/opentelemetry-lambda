@@ -4,7 +4,7 @@ This repo is a fork of [`coralogix/opentelemetry-lambda`](https://github.com/cor
 
 We also consume [`coralogix/opentelemetry-js-contrib`](https://github.com/coralogix/opentelemetry-js-contrib) (branch `coralogix-autoinstrumentation`) at build time — pinned separately in `scripts/publish-sandbox.sh` and `.github/workflows/publish-extend-otel-layer.yml`.
 
-Why we fork cx-contrib: upstream OpenTelemetry has declined the Lambda-specific PRs (trigger subsystem, early-spans-on-timeout, `cx.internal.*` reconciliation attrs — see contrib#1349, contrib#1295, contrib#1309). See `~/workspace/scratch/otel-fork-research/summary.md` for the full rationale.
+Why we fork cx-contrib: upstream OpenTelemetry has declined the Lambda-specific PRs (trigger subsystem, early-spans-on-timeout, `cx.internal.*` reconciliation attrs — see contrib#1349, contrib#1295, contrib#1309). Full rationale: [DEVOPS-2394: OTel Lambda fork analysis](https://helloextend.atlassian.net/wiki/spaces/ENG/pages/3529080850/DEVOPS-2394+OTel+Lambda+fork+analysis).
 
 ## Fork points
 
@@ -12,38 +12,58 @@ Why we fork cx-contrib: upstream OpenTelemetry has declined the Lambda-specific 
 |---|---|---|---|
 | `coralogix/opentelemetry-lambda` | `coralogix-nodejs-autoinstrumentation` | `8838714287b2d8a1d1c037b5f098f9bd96e8fdd3` | 2026-03-12 |
 | `coralogix/opentelemetry-js-contrib` | `coralogix-autoinstrumentation` | `3a9691a699ddd06c3644eec70bf4b50cc4217ba3` | 2026-04-18 |
+| `open-telemetry/opentelemetry-lambda` | `main` @ tag `layer-nodejs/0.10.0` | `c9e67c4d8e208000ddbcbab0b8cfe56fc5cf58b6` | 2024-09-24 |
 
-Upstream remote in this repo is configured as `upstream` → `coralogix/opentelemetry-lambda`:
+The `open-telemetry/...` row is transitive — last time Coralogix pulled from OTel-upstream into `coralogix-nodejs-autoinstrumentation` was merge commit [`436f3d0`](https://github.com/coralogix/opentelemetry-lambda/commit/436f3d0) (`Merge tag 'layer-nodejs/0.10.0' into merge`, 2024-10-28), whose second parent is `c9e67c4`. To catch up, start walking OTel-upstream from that SHA:
+
+```
+https://github.com/open-telemetry/opentelemetry-lambda/compare/c9e67c4...main
+```
+
+~416 OTel-`main` commits have landed since. Coralogix merges selectively — whole tags (`436f3d0`) or cherry-picks that rewrite SHAs — so don't rely on `git merge-base` alone when checking what's already in. The sync skill (DEVOPS-2502) should diff by `git patch-id` across the walk.
+
+## Remote setup (one-time, per clone)
+
+Remotes aren't checked into the repo. After cloning, run:
 
 ```bash
-git remote -v | grep upstream
-# upstream  https://github.com/coralogix/opentelemetry-lambda.git (fetch)
-# upstream  https://github.com/coralogix/opentelemetry-lambda.git (push)
+git remote add upstream       https://github.com/coralogix/opentelemetry-lambda.git
+git remote add otel-upstream  https://github.com/open-telemetry/opentelemetry-lambda.git
+git fetch upstream otel-upstream
 ```
 
 ## Manual sync process
 
-Until the sync skill lands (see DEVOPS-2502), upstream changes are pulled in manually:
+Until the sync skill lands (see DEVOPS-2502), upstream changes are pulled in manually. Walk both upstreams — coralogix adds CX-specific features; open-telemetry adds core fixes/security patches that coralogix hasn't yet absorbed.
+
+**coralogix/opentelemetry-lambda** (direct parent):
 
 ```bash
 git fetch upstream
 git log 8838714287b2d8a1d1c037b5f098f9bd96e8fdd3..upstream/coralogix-nodejs-autoinstrumentation --oneline
-# review each commit for relevance — most upstream churn is CX-internal or
-# language-specific (Java/Ruby/.NET/Go) and doesn't affect our layer
+# most churn here is CX-internal or language-specific (Java/Ruby/.NET/Go) — skip those
 ```
 
-After pulling upstream changes, bump the fork SHA row in this file and note the date.
-
-For `coralogix/opentelemetry-js-contrib`:
+**open-telemetry/opentelemetry-lambda** (upstream-upstream):
 
 ```bash
-cd .build-cache/opentelemetry-js-contrib  # or your override path
+git fetch otel-upstream
+git log c9e67c4d8e208000ddbcbab0b8cfe56fc5cf58b6..otel-upstream/main --oneline -- nodejs/ collector/
+# scope the path filter to dirs we ship; Node wrapper + collector only
+```
+
+**coralogix/opentelemetry-js-contrib** (build-time dep):
+
+```bash
+cd .build-cache/opentelemetry-js-contrib  # or your OPENTELEMETRY_JS_CONTRIB_PATH override
 git fetch origin
 git log 3a9691a699ddd06c3644eec70bf4b50cc4217ba3..origin/coralogix-autoinstrumentation --oneline
 ```
 
-When bumping, update **both** places in sync:
+After pulling changes, bump the matching row in the fork-points table. When bumping the cx-contrib SHA specifically, update **three** places in sync:
+
 - `scripts/publish-sandbox.sh` → `CX_CONTRIB_SHA`
+- `scripts/build-nodejs.sh` → `CX_CONTRIB_SHA`
 - `.github/workflows/publish-extend-otel-layer.yml` → `ref:` on the cx-contrib checkout step
 - This file's fork-points table
 
@@ -55,5 +75,6 @@ The following language-specific upstream directories were removed in this fork �
 - `java/`
 - `ruby/`
 - `go/` (Go-language Lambda layer; the Go collector build in `collector/` is unrelated)
+- `python/` — if Python autoinstrumentation is needed, start from `origin/python-instrumentation`, not the upstream dir
 
 If upstream eventually adds new languages, decide fork-in vs drop at sync time.
