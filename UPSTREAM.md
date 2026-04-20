@@ -60,7 +60,7 @@ git fetch origin
 git log 3a9691a699ddd06c3644eec70bf4b50cc4217ba3..origin/coralogix-autoinstrumentation --oneline
 ```
 
-After pulling changes, bump the matching row in the fork-points table. When bumping the cx-contrib SHA specifically, update **three** places in sync:
+After pulling changes, bump the matching row in the fork-points table. When bumping the cx-contrib SHA specifically, update **four** places in sync:
 
 - `scripts/publish-sandbox.sh` → `CX_CONTRIB_SHA`
 - `scripts/build-nodejs.sh` → `CX_CONTRIB_SHA`

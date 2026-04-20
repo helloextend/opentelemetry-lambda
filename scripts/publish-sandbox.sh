@@ -52,6 +52,7 @@ echo "==> publishing to $REGION"
 aws lambda publish-layer-version \
   --layer-name "$LAYER_NAME" \
   --license-info "Apache 2.0" \
+  --description "cx-contrib@${CX_CONTRIB_SHA:0:7} built $(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   --compatible-architectures "$AWS_ARCH" \
   --compatible-runtimes nodejs22.x nodejs24.x \
   --zip-file fileb://build-sandbox/layer.zip \

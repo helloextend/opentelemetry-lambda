@@ -1,4 +1,4 @@
-//go:build lambdacomponents.custom && (lambdacomponents.all || lambdacomponents.exporter.all || lambdacomponents.exporter.logging)
+//go:build lambdacomponents.custom && (lambdacomponents.all || lambdacomponents.exporter.all || lambdacomponents.exporter.debug)
 
 // Copyright The OpenTelemetry Authors
 //

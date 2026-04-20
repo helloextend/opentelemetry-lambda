@@ -68,6 +68,8 @@ exporters:
   # Coralogix — unified OTLP gRPC ingress endpoint (traces, metrics, logs)
   otlp/coralogix:
     endpoint: ${env:CX_ENDPOINT:-ingress.us2.coralogix.com:443}
+    tls:
+      insecure: false
     headers:
       Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
       CX-Application-Name: ${env:CX_APPLICATION}
@@ -78,6 +80,8 @@ exporters:
   # headers_setter supplies api_key / space_id / project_name per request.
   otlp/arize:
     endpoint: ${env:ARIZE_COLLECTOR_ENDPOINT:-otlp.arize.com:443}
+    tls:
+      insecure: false
     auth:
       authenticator: headers_setter
 

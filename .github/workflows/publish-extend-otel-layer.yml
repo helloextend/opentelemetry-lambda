@@ -84,6 +84,13 @@ jobs:
           unzip -o dl/collector/opentelemetry-collector-layer-${{ matrix.architecture }}.zip -d out/
           unzip -o dl/nodejs/layer.zip -d out/
           (cd out && zip -r ../layer.zip .)
+      # Lambda hard limit is 50MB zipped; the merged artifact (collector + nodejs)
+      # is what actually gets published, so size-check here rather than only on
+      # the pre-merge nodejs zip in build-nodejs.
+      - env:
+          FILE_PATH: ./layer.zip
+          MAX_SIZE: 52428800
+        run: ./scripts/check_size.sh
       - name: Publish layer version
         env:
           AWS_REGION: ${{ matrix.region }}
