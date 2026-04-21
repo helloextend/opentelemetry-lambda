@@ -1,6 +1,6 @@
 # Extend OTel Lambda collector config — dual export to Coralogix + Arize (no S3 archival).
 #
-# Selected via OPENTELEMETRY_COLLECTOR_CONFIG_URI when arizeTracingProps is
+# Selected via OPENTELEMETRY_COLLECTOR_CONFIG_URI when otelTracingProps is
 # provided WITHOUT s3Archival. For CX+Arize+S3 see collector-config-cx-arize-s3.yaml.
 #
 # Trace pipelines are split:

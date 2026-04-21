@@ -16,7 +16,7 @@ Why we fork cx-contrib: upstream OpenTelemetry has declined the Lambda-specific 
 
 The `open-telemetry/...` row is transitive — last time Coralogix pulled from OTel-upstream into `coralogix-nodejs-autoinstrumentation` was merge commit [`436f3d0`](https://github.com/coralogix/opentelemetry-lambda/commit/436f3d0) (`Merge tag 'layer-nodejs/0.10.0' into merge`, 2024-10-28), whose second parent is `c9e67c4`. To catch up, start walking OTel-upstream from that SHA:
 
-```
+```text
 https://github.com/open-telemetry/opentelemetry-lambda/compare/c9e67c4...main
 ```
 
@@ -29,7 +29,8 @@ Remotes aren't checked into the repo. After cloning, run:
 ```bash
 git remote add upstream       https://github.com/coralogix/opentelemetry-lambda.git
 git remote add otel-upstream  https://github.com/open-telemetry/opentelemetry-lambda.git
-git fetch upstream otel-upstream
+git fetch upstream
+git fetch otel-upstream
 ```
 
 ## Manual sync process

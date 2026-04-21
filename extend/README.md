@@ -56,12 +56,12 @@ Mastra AI spans are emitted on `localhost:4319` (gRPC) / `localhost:4320` (HTTP)
 Follows upstream: `./scripts/build_nodejs_layer.sh` — requires a sibling checkout of `coralogix/opentelemetry-js-contrib` (branch `coralogix-autoinstrumentation`) set via `OPENTELEMETRY_JS_CONTRIB_PATH`. See `.github/workflows/publish-extend-otel-layer.yml` for the published flow.
 
 **Extend-specific follow-ups** (tracked in DEVOPS-2394):
-- [ ] Add GitHub Actions workflow to publish to Extend AWS accounts
+- [x] Add GitHub Actions workflow to publish to Extend AWS accounts
 - [ ] Publish layer version to SSM `/extend/otel-lambda/layer-version/{arch}` for CDK lookup
 
 ## Upstream sync
 
-```
+```bash
 git fetch upstream coralogix-nodejs-autoinstrumentation
 git merge upstream/coralogix-nodejs-autoinstrumentation
 ```

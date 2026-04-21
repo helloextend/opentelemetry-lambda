@@ -2,7 +2,7 @@
 #
 # Consumed by services that integrate Arize tracing. Selected via the
 # OPENTELEMETRY_COLLECTOR_CONFIG_URI env var set by extend-cdk-lib
-# NodeLambdaBuilder when `arizeTracingProps` is provided.
+# NodeLambdaBuilder when `otelTracingProps` is provided.
 #
 # Secret resolution is native: `${secretsmanager:<name-or-arn>}` is expanded
 # at collector startup by the secretsmanagerprovider confmap provider

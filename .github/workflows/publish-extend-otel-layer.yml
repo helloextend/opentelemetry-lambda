@@ -48,7 +48,10 @@ jobs:
       # Pinned SHA — bump when upstream cx-contrib lands a fix/feature we want.
       # Keep in sync with CX_CONTRIB_SHA in scripts/publish-sandbox.sh.
       - uses: actions/checkout@v4
-        with: { repository: coralogix/opentelemetry-js-contrib, ref: 3a9691a699ddd06c3644eec70bf4b50cc4217ba3, path: opentelemetry-js-contrib }
+        with:
+          repository: coralogix/opentelemetry-js-contrib
+          ref: 3a9691a699ddd06c3644eec70bf4b50cc4217ba3
+          path: opentelemetry-js-contrib
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -73,10 +76,18 @@ jobs:
         architecture: [amd64, arm64]
         region: [us-east-1, us-west-2]
     steps:
+      # check_size.sh lives in the repo; checkout is required before running it.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
       - uses: actions/download-artifact@v4
-        with: { name: collector-${{ matrix.architecture }}, path: dl/collector }
+        with:
+          name: collector-${{ matrix.architecture }}
+          path: dl/collector
       - uses: actions/download-artifact@v4
-        with: { name: nodejs-layer, path: dl/nodejs }
+        with:
+          name: nodejs-layer
+          path: dl/nodejs
       - name: Merge collector + nodejs zips
         run: |
           set -euo pipefail
