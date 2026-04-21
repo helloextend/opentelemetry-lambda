@@ -2,7 +2,7 @@
 
 This repo is a fork of [`coralogix/opentelemetry-lambda`](https://github.com/coralogix/opentelemetry-lambda) (branch `coralogix-nodejs-autoinstrumentation`), which is itself a fork of [`open-telemetry/opentelemetry-lambda`](https://github.com/open-telemetry/opentelemetry-lambda).
 
-We also consume [`coralogix/opentelemetry-js-contrib`](https://github.com/coralogix/opentelemetry-js-contrib) (branch `coralogix-autoinstrumentation`) at build time — pinned separately in `scripts/publish-sandbox.sh` and `.github/workflows/publish-extend-otel-layer.yml`.
+We also consume [`coralogix/opentelemetry-js-contrib`](https://github.com/coralogix/opentelemetry-js-contrib) (branch `coralogix-autoinstrumentation`) at build time. The SHA is pinned in three places that must be bumped together: `scripts/build-nodejs.sh`, `scripts/publish-sandbox.sh`, and `.github/workflows/publish-extend-otel-layer.yml`. See the "Manual sync process" section below for the full update procedure.
 
 Why we fork cx-contrib: upstream OpenTelemetry has declined the Lambda-specific PRs (trigger subsystem, early-spans-on-timeout, `cx.internal.*` reconciliation attrs — see contrib#1349, contrib#1295, contrib#1309). Full rationale: [DEVOPS-2394: OTel Lambda fork analysis](https://helloextend.atlassian.net/wiki/spaces/ENG/pages/3529080850/DEVOPS-2394+OTel+Lambda+fork+analysis).
 
