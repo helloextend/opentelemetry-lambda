@@ -2,7 +2,7 @@
 #
 # Consumed by services that integrate Arize tracing. Selected via the
 # OPENTELEMETRY_COLLECTOR_CONFIG_URI env var set by extend-cdk-lib
-# NodeLambdaBuilder when `arizeTracingProps` is provided.
+# NodeLambdaBuilder when `otelTracingProps` is provided.
 #
 # Secret resolution is native: `${secretsmanager:<name-or-arn>}` is expanded
 # at collector startup by the secretsmanagerprovider confmap provider
@@ -30,7 +30,7 @@
 #   AWS_REGION               — provided by Lambda runtime
 #
 # Optional:
-#   CX_ENDPOINT              — default otel-traces.coralogix.com:443
+#   CX_ENDPOINT              — default ingress.us2.coralogix.com:443
 #   ARIZE_COLLECTOR_ENDPOINT — default otlp.arize.com:443 (gRPC)
 #   ARIZE_S3_PREFIX          — default traces/${CX_APPLICATION}/${CX_SUBSYSTEM}
 
@@ -73,25 +73,11 @@ processors:
   decouple:
 
 exporters:
-  # Coralogix — OTLP gRPC to CX traces endpoint
+  # Coralogix — unified OTLP gRPC ingress endpoint (traces, metrics, logs)
   otlp/coralogix:
-    endpoint: ${env:CX_ENDPOINT:-otel-traces.coralogix.com:443}
-    headers:
-      Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
-      CX-Application-Name: ${env:CX_APPLICATION}
-      CX-Subsystem-Name: ${env:CX_SUBSYSTEM}
-
-  # Coralogix — metrics endpoint
-  otlp/coralogix_metrics:
-    endpoint: otel-metrics.coralogix.com:443
-    headers:
-      Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
-      CX-Application-Name: ${env:CX_APPLICATION}
-      CX-Subsystem-Name: ${env:CX_SUBSYSTEM}
-
-  # Coralogix — logs endpoint
-  otlp/coralogix_logs:
-    endpoint: otel-logs.coralogix.com:443
+    endpoint: ${env:CX_ENDPOINT:-ingress.us2.coralogix.com:443}
+    tls:
+      insecure: false
     headers:
       Authorization: Bearer ${secretsmanager:${env:CX_SECRET}}
       CX-Application-Name: ${env:CX_APPLICATION}
@@ -102,6 +88,8 @@ exporters:
   # headers_setter supplies api_key / space_id / project_name per request.
   otlp/arize:
     endpoint: ${env:ARIZE_COLLECTOR_ENDPOINT:-otlp.arize.com:443}
+    tls:
+      insecure: false
     auth:
       authenticator: headers_setter
 
@@ -129,11 +117,11 @@ service:
     metrics:
       receivers: [otlp]
       processors: [batch, decouple]
-      exporters: [otlp/coralogix_metrics]
+      exporters: [otlp/coralogix]
     logs:
       receivers: [otlp, telemetryapi]
       processors: [batch, decouple]
-      exporters: [otlp/coralogix_logs]
+      exporters: [otlp/coralogix]
   telemetry:
     metrics:
       address: localhost:8888

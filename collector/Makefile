@@ -2,8 +2,6 @@ include ./Makefile.Common
 
 BASE_SPACE:=$(shell pwd)
 BUILD_SPACE:=$(BASE_SPACE)/build
-BUCKET_NAME:=lambda-artifacts-$(shell dd if=/dev/random bs=8 count=1 2>/dev/null | od -An -tx1 | tr -d ' \t\n')
-LAYER_NAME:=otel-collector
 OTELCOL_VERSION="UNSET" # run recipe set-otelcol-version to get this
 GIT_SHA=$(shell git rev-parse HEAD)
 GOARCH ?= amd64
@@ -38,22 +36,14 @@ build: clean set-otelcol-version
 	mkdir -p $(BUILD_SPACE)/extensions
 	GOOS=linux GOARCH=$(GOARCH) $(GOBUILD) $(LDFLAGS) -o $(BUILD_SPACE)/extensions .
 
-.PHONY: package
-package: build
-	@echo Package zip file for collector extension layer
+.PHONY: package-extend
+package-extend: build
+	@echo Packaging Extend collector layer
 	mkdir -p $(BUILD_SPACE)/collector-config
-	cp config* $(BUILD_SPACE)/collector-config
+	cp ../extend/collector-config-cx-only.yaml     $(BUILD_SPACE)/collector-config/config.yaml
+	cp ../extend/collector-config-cx-arize.yaml    $(BUILD_SPACE)/collector-config/
+	cp ../extend/collector-config-cx-arize-s3.yaml $(BUILD_SPACE)/collector-config/
 	cd $(BUILD_SPACE) && zip -r opentelemetry-collector-layer-$(GOARCH).zip collector-config extensions
-
-.PHONY: publish
-publish:
-	aws lambda publish-layer-version --layer-name $(LAYER_NAME) --zip-file fileb://$(BUILD_SPACE)/opentelemetry-collector-layer-$(GOARCH).zip --compatible-runtimes nodejs14.x nodejs16.x nodejs18.x java11 python3.8 python3.9 python3.10 python3.11 --query 'LayerVersionArn' --output text
-
-.PHONY: publish-layer
-publish-layer: package
-	@echo Publishing collector extension layer...
-	aws lambda publish-layer-version --layer-name $(LAYER_NAME) --zip-file fileb://$(BUILD_SPACE)/opentelemetry-collector-layer-$(GOARCH).zip --compatible-runtimes nodejs14.x nodejs16.x nodejs18.x java11 python3.8 python3.9 python3.10 python3.11 --query 'LayerVersionArn' --output text
-	@echo OpenTelemetry Collector layer published.
 
 .PHONY: set-otelcol-version
 set-otelcol-version:
@@ -86,17 +76,7 @@ gofmt:
 
 .PHONY: install-tools
 install-tools:
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/client9/misspell/cmd/misspell
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/google/addlicense
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/ory/go-acc
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/pavius/impi/cmd/impi
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/tcnksm/ghr
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/wadey/gocovmerge
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/chloggen
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/semconvgen
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install golang.org/x/exp/cmd/apidiff
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install golang.org/x/tools/cmd/goimports
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/jcchavezs/porto/cmd/porto
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/multimod
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/crosslink

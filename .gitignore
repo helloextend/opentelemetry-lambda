@@ -26,6 +26,11 @@ collector/VERSION
 opentelemetry-js/
 opentelemetry-js-contrib-cx/
 import-in-the-middle/
+.build-cache/
+build-sandbox/
 
 .envrc
 mise.toml
+
+.claude/worktrees/
+extend/plan-*.md

@@ -1,0 +1,127 @@
+# TODO — if CDK stack added to this repo, migrate auth to GitHub OIDC + dedicated IAM role in
+# 159581800400; delete AWS_ACCESS_KEY_ID/_SECRET secrets.
+
+name: Publish Extend OTel Lambda Layer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'collector/**'
+      - 'nodejs/**'
+      - 'extend/**'
+      - 'scripts/**'
+      - '.github/workflows/publish-extend-otel-layer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AWS_ACCESS_KEY_ID:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  build-collector:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    strategy:
+      matrix: { architecture: [amd64, arm64] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: collector/go.mod
+          cache-dependency-path: collector/go.sum
+      - run: make -C collector package-extend GOARCH=${{ matrix.architecture }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: collector-${{ matrix.architecture }}
+          path: collector/build/opentelemetry-collector-layer-${{ matrix.architecture }}.zip
+
+  build-nodejs:
+    # Only cx-contrib fork needed. cx-js dropped (npm now); import-in-the-middle already from npm.
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    env:
+      OPENTELEMETRY_JS_CONTRIB_PATH: ${{ github.workspace }}/opentelemetry-js-contrib
+    steps:
+      - uses: actions/checkout@v4
+      # Pinned SHA — bump when upstream cx-contrib lands a fix/feature we want.
+      # Keep in sync with CX_CONTRIB_SHA in scripts/publish-sandbox.sh.
+      - uses: actions/checkout@v4
+        with:
+          repository: coralogix/opentelemetry-js-contrib
+          ref: 3a9691a699ddd06c3644eec70bf4b50cc4217ba3
+          path: opentelemetry-js-contrib
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: nodejs/packages/layer/package-lock.json
+      - run: ./scripts/build_nodejs_layer.sh
+      - env:
+          FILE_PATH: ./nodejs/packages/layer/build/layer.zip
+          MAX_SIZE: 9437184
+        run: ./scripts/check_size.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nodejs-layer
+          path: nodejs/packages/layer/build/layer.zip
+
+  package-and-publish:
+    needs: [build-collector, build-nodejs]
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [amd64, arm64]
+        region: [us-east-1, us-west-2]
+    steps:
+      # check_size.sh lives in the repo; checkout is required before running it.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+      - uses: actions/download-artifact@v4
+        with:
+          name: collector-${{ matrix.architecture }}
+          path: dl/collector
+      - uses: actions/download-artifact@v4
+        with:
+          name: nodejs-layer
+          path: dl/nodejs
+      - name: Merge collector + nodejs zips
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          unzip -o dl/collector/opentelemetry-collector-layer-${{ matrix.architecture }}.zip -d out/
+          unzip -o dl/nodejs/layer.zip -d out/
+          (cd out && zip -r ../layer.zip .)
+      # Lambda hard limit is 50MB zipped; the merged artifact (collector + nodejs)
+      # is what actually gets published, so size-check here rather than only on
+      # the pre-merge nodejs zip in build-nodejs.
+      - env:
+          FILE_PATH: ./layer.zip
+          MAX_SIZE: 52428800
+        run: ./scripts/check_size.sh
+      - name: Publish layer version
+        env:
+          AWS_REGION: ${{ matrix.region }}
+        run: |
+          set -euo pipefail
+          LAYER_NAME=extend-nodejs-wrapper-and-exporter-${{ matrix.architecture }}
+          ARCH=$(echo "${{ matrix.architecture }}" | sed 's/amd64/x86_64/')
+          LAYER_ARN=$(aws lambda publish-layer-version \
+            --layer-name "$LAYER_NAME" \
+            --license-info "Apache 2.0" \
+            --compatible-architectures "$ARCH" \
+            --compatible-runtimes nodejs22.x nodejs24.x \
+            --zip-file fileb://layer.zip \
+            --query 'LayerVersionArn' --output text)
+          VERSION="${LAYER_ARN##*:}"
+          echo "::notice ::$LAYER_ARN"
+          aws lambda add-layer-version-permission \
+            --layer-name "$LAYER_NAME" \
+            --version-number "$VERSION" \
+            --statement-id orgVisible \
+            --action lambda:GetLayerVersion \
+            --principal '*' \
+            --organization-id o-7ngcsohuq5
