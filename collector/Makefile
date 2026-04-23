@@ -27,7 +27,8 @@ $(GOMODULES):
 # Triggers each module's delegation target, continuing through all modules even on failure
 .PHONY: for-all-target
 for-all-target:
-	@err=0; for dir in $(MODULES); do \
+	@if [ -z "$(TARGET)" ]; then echo "ERROR: TARGET is empty; specify a target to run across modules" >&2; exit 1; fi; \
+	err=0; for dir in $(MODULES); do \
 		echo "Running target '$(TARGET)' in module '$$dir'"; \
 		$(MAKE) -C $$dir $(TARGET) || err=$$?; \
 	done; exit $$err

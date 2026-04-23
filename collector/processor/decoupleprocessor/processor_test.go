@@ -40,8 +40,15 @@ func (m *MockConsumer) consume(ctx context.Context, data any) error {
 func (m *MockConsumer) receiveDataAfter(d time.Duration) {
 	go func() {
 		time.Sleep(d)
+		m.lock.Lock()
 		m.gotData = false
-		data := <-m.dataReceived
+		m.lock.Unlock()
+		var data any
+		select {
+		case data = <-m.dataReceived:
+		case <-time.After(5 * time.Second):
+			return
+		}
 		m.lock.Lock()
 		m.data = data
 		m.gotData = true
