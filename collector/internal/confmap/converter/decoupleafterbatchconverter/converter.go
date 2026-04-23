@@ -17,7 +17,7 @@
 // This is logically implemented by appending the decouple processor to the end of
 // processor chains where a batch processor is found unless another decouple processor
 // was seen.
-package decoupleafterbatchconverter
+package decoupleafterbatchconverter // import "github.com/open-telemetry/opentelemetry-lambda/collector/internal/confmap/converter/decoupleafterbatchconverter"
 
 import (
 	"context"

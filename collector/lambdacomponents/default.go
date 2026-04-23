@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package lambdacomponents
+package lambdacomponents // import "github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents"
 
 import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awss3exporter"
@@ -26,7 +26,6 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanprocessor"
-	"github.com/open-telemetry/opentelemetry-lambda/collector/processor/decoupleprocessor"
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/exporter/debugexporter"
 	"go.opentelemetry.io/collector/exporter/otlpexporter"
@@ -41,6 +40,7 @@ import (
 	"go.uber.org/multierr"
 
 	"github.com/open-telemetry/opentelemetry-lambda/collector/processor/coldstartprocessor"
+	"github.com/open-telemetry/opentelemetry-lambda/collector/processor/decoupleprocessor"
 	"github.com/open-telemetry/opentelemetry-lambda/collector/receiver/telemetryapireceiver"
 )
 

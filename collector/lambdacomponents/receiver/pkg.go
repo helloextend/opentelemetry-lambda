@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package receiver
+package receiver // import "github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents/receiver"
 
 import "go.opentelemetry.io/collector/receiver"
 
-var Factories  []func(extensionId string) receiver.Factory
+var Factories []func(extensionId string) receiver.Factory

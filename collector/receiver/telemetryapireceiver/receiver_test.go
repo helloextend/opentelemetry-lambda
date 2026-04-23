@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
@@ -111,7 +112,7 @@ func TestHandler(t *testing.T) {
 			consumer := mockConsumer{}
 			r, err := newTelemetryAPIReceiver(
 				&Config{},
-				receivertest.NewNopSettings(),
+				receivertest.NewNopSettings(component.MustNewType(typeStr)),
 			)
 			require.NoError(t, err)
 			r.registerTracesConsumer(&consumer)
@@ -158,7 +159,7 @@ func TestCreatePlatformInitSpan(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			r, err := newTelemetryAPIReceiver(
 				&Config{},
-				receivertest.NewNopSettings(),
+				receivertest.NewNopSettings(component.MustNewType(typeStr)),
 			)
 			require.NoError(t, err)
 			td, err := r.createPlatformInitSpan(tc.start, tc.end)
@@ -448,7 +449,7 @@ func TestCreateLogs(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			r, err := newTelemetryAPIReceiver(
 				&Config{},
-				receivertest.NewNopSettings(),
+				receivertest.NewNopSettings(component.MustNewType(typeStr)),
 			)
 			require.NoError(t, err)
 			log, err := r.createLogs(tc.slice)

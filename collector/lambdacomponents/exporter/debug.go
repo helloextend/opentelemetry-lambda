@@ -15,7 +15,7 @@
 // limitations under the License.
 
 // loggingexporter was removed after v0.110.0; replaced by debugexporter.
-package exporter
+package exporter // import "github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents/exporter"
 
 import (
 	"go.opentelemetry.io/collector/exporter"

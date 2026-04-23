@@ -47,13 +47,13 @@ func TestNewFactory(t *testing.T) {
 			},
 		},
 		{
-			desc: "creates a new factory and CreateTracesReceiver returns no error",
+			desc: "creates a new factory and CreateTraces returns no error",
 			testFunc: func(t *testing.T) {
 				factory := NewFactory("test")
 				cfg := factory.CreateDefaultConfig()
-				_, err := factory.CreateTracesReceiver(
+				_, err := factory.CreateTraces(
 					context.Background(),
-					receivertest.NewNopSettings(),
+					receivertest.NewNopSettings(component.MustNewType(typeStr)),
 					cfg,
 					consumertest.NewNop(),
 				)
@@ -61,12 +61,12 @@ func TestNewFactory(t *testing.T) {
 			},
 		},
 		{
-			desc: "creates a new factory and CreateTracesReceiver returns error with incorrect config",
+			desc: "creates a new factory and CreateTraces returns error with incorrect config",
 			testFunc: func(t *testing.T) {
 				factory := NewFactory("test")
-				_, err := factory.CreateTracesReceiver(
+				_, err := factory.CreateTraces(
 					context.Background(),
-					receivertest.NewNopSettings(),
+					receivertest.NewNopSettings(component.MustNewType(typeStr)),
 					nil,
 					consumertest.NewNop(),
 				)

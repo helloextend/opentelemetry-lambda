@@ -29,6 +29,7 @@ import (
 
 	"github.com/cespare/xxhash"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.opentelemetry.io/collector/processor/processorhelper"
@@ -131,7 +132,7 @@ func TestProcessor(t *testing.T) {
 			c, err := newColdstartProcessor(
 				nil,
 				nil,
-				processortest.NewNopSettings(),
+				processortest.NewNopSettings(component.MustNewType(typeStr)),
 			)
 			require.NoError(t, err)
 			td, err := c.processTraces(context.Background(), tc.input)
@@ -148,7 +149,7 @@ func TestMultipleProcessTraces(t *testing.T) {
 	c, err := newColdstartProcessor(
 		nil,
 		nil,
-		processortest.NewNopSettings(),
+		processortest.NewNopSettings(component.MustNewType(typeStr)),
 	)
 	require.NoError(t, err)
 	expected := ptrace.NewTraces()
@@ -180,7 +181,7 @@ func TestMultipleProcessTraces(t *testing.T) {
 	c, err = newColdstartProcessor(
 		nil,
 		nil,
-		processortest.NewNopSettings(),
+		processortest.NewNopSettings(component.MustNewType(typeStr)),
 	)
 	require.NoError(t, err)
 	input = ptrace.NewTraces()

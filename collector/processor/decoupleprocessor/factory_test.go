@@ -18,11 +18,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdalifecycle"
-
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer/consumertest"
 	"go.opentelemetry.io/collector/processor/processortest"
+
+	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdalifecycle"
 )
 
 func TestNewFactory(t *testing.T) {
@@ -39,13 +40,13 @@ func TestNewFactory(t *testing.T) {
 			},
 		},
 		{
-			desc: "creates a new factory and CreateTracesProcessor returns no error",
+			desc: "creates a new factory and CreateTraces returns no error",
 			testFunc: func(t *testing.T) {
 				factory := NewFactory()
 				cfg := factory.CreateDefaultConfig()
-				_, err := factory.CreateTracesProcessor(
+				_, err := factory.CreateTraces(
 					context.Background(),
-					processortest.NewNopSettings(),
+					processortest.NewNopSettings(component.MustNewType(typeStr)),
 					cfg,
 					consumertest.NewNop(),
 				)
@@ -53,12 +54,12 @@ func TestNewFactory(t *testing.T) {
 			},
 		},
 		{
-			desc: "creates a new factory and CreateTracesProcessor returns error with incorrect config",
+			desc: "creates a new factory and CreateTraces returns error with incorrect config",
 			testFunc: func(t *testing.T) {
 				factory := NewFactory()
-				_, err := factory.CreateTracesProcessor(
+				_, err := factory.CreateTraces(
 					context.Background(),
-					processortest.NewNopSettings(),
+					processortest.NewNopSettings(component.MustNewType(typeStr)),
 					nil,
 					consumertest.NewNop(),
 				)

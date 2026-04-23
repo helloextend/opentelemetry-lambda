@@ -17,9 +17,8 @@ import (
 	"context"
 	"testing"
 
-	"go.opentelemetry.io/collector/confmap"
-
 	"github.com/google/go-cmp/cmp"
+	"go.opentelemetry.io/collector/confmap"
 )
 
 func TestConvert(t *testing.T) {

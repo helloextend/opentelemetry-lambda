@@ -22,9 +22,13 @@ $(GOMODULES):
 	@echo "Running target '$(TARGET)' in module '$@'"
 	$(MAKE) -C $@ $(TARGET)
 
-# Triggers each module's delegation target
+# Triggers each module's delegation target, continuing through all modules even on failure
 .PHONY: for-all-target
-for-all-target: $(GOMODULES)
+for-all-target:
+	@err=0; for dir in $(GOMODULES); do \
+		echo "Running target '$(TARGET)' in module '$$dir'"; \
+		$(MAKE) -C $$dir $(TARGET) || err=$$?; \
+	done; exit $$err
 
 .PHONY: clean
 clean:
@@ -66,17 +70,16 @@ goporto: install-tools
 golint: install-tools
 	@$(MAKE) for-all-target TARGET="lint"
 
-.PHONY: goimpi
-goimpi: install-tools
-	@$(MAKE) for-all-target TARGET="impi"
+.PHONY: golintfix
+golintfix: install-tools
+	@$(MAKE) for-all-target TARGET="lintfix"
 
 .PHONY: gofmt
-gofmt:
+gofmt: install-tools
 	@$(MAKE) for-all-target TARGET="fmt"
 
 .PHONY: install-tools
 install-tools:
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/pavius/impi/cmd/impi
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install golang.org/x/tools/cmd/goimports
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/jcchavezs/porto/cmd/porto

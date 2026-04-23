@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package lifecycle
+package lifecycle // import "github.com/open-telemetry/opentelemetry-lambda/collector/internal/lifecycle"
 
 import (
 	"context"
 	"fmt"
-	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdalifecycle"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -31,6 +30,7 @@ import (
 	"github.com/open-telemetry/opentelemetry-lambda/collector/internal/extensionapi"
 	"github.com/open-telemetry/opentelemetry-lambda/collector/internal/telemetryapi"
 	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents"
+	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdalifecycle"
 )
 
 var (
