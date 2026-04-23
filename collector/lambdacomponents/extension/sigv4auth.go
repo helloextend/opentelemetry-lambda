@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package extension
+package extension // import "github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents/extension"
 
 import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/sigv4authextension"

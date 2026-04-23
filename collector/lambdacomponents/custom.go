@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package lambdacomponents
+package lambdacomponents // import "github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents"
 
 import (
 	custom_connector "github.com/open-telemetry/opentelemetry-lambda/collector/lambdacomponents/connector"

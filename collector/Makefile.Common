@@ -3,7 +3,6 @@ GOCMD?= go
 GOTEST=$(GOCMD) test
 GO_ACC=go-acc
 LINT=golangci-lint
-IMPI=impi
 
 GOOS := $(shell $(GOCMD) env GOOS)
 GOARCH := $(shell $(GOCMD) env GOARCH)
@@ -29,19 +28,19 @@ fmt:
 .PHONY: tidy
 tidy:
 	rm -fr go.sum
-	$(GOCMD) mod tidy -compat=1.25
+	$(GOCMD) mod tidy -compat=1.26
 
 .PHONY: lint
 lint:
 	$(LINT) run
 
+.PHONY: lintfix
+lintfix:
+	$(LINT) run --fix
+
 .PHONY: generate
 generate:
 	$(GOCMD) generate ./...
-
-.PHONY: impi
-impi:
-	@$(IMPI) --local github.com/open-telemetry/opentelemetry-lambda/collector --scheme stdThirdPartyLocal ./...
 
 .PHONY: moddownload
 moddownload:

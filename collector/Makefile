@@ -15,6 +15,8 @@ TOOLS_MOD_DIR := ./internal/tools
 ALL_GO_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} \; | sort)
 OTEL_GO_MOD_DIRS := $(filter-out $(TOOLS_MOD_DIR), $(ALL_GO_MOD_DIRS))
 GOMODULES = $(OTEL_GO_MOD_DIRS) $(PWD)
+TIDY_MODULES = $(ALL_GO_MOD_DIRS) $(PWD)
+MODULES ?= $(GOMODULES)
 
 # Define a delegation target for each module
 .PHONY: $(GOMODULES)
@@ -22,9 +24,14 @@ $(GOMODULES):
 	@echo "Running target '$(TARGET)' in module '$@'"
 	$(MAKE) -C $@ $(TARGET)
 
-# Triggers each module's delegation target
+# Triggers each module's delegation target, continuing through all modules even on failure
 .PHONY: for-all-target
-for-all-target: $(GOMODULES)
+for-all-target:
+	@if [ -z "$(TARGET)" ]; then echo "ERROR: TARGET is empty; specify a target to run across modules" >&2; exit 1; fi; \
+	err=0; for dir in $(MODULES); do \
+		echo "Running target '$(TARGET)' in module '$$dir'"; \
+		$(MAKE) -C $$dir $(TARGET) || err=$$?; \
+	done; exit $$err
 
 .PHONY: clean
 clean:
@@ -52,7 +59,7 @@ set-otelcol-version:
 
 .PHONY: gotidy
 gotidy:
-	@$(MAKE) for-all-target TARGET="tidy"
+	@$(MAKE) for-all-target TARGET="tidy" MODULES="$(TIDY_MODULES)"
 
 .PHONY: gotest
 gotest:
@@ -66,17 +73,16 @@ goporto: install-tools
 golint: install-tools
 	@$(MAKE) for-all-target TARGET="lint"
 
-.PHONY: goimpi
-goimpi: install-tools
-	@$(MAKE) for-all-target TARGET="impi"
+.PHONY: golintfix
+golintfix: install-tools
+	@$(MAKE) for-all-target TARGET="lintfix"
 
 .PHONY: gofmt
-gofmt:
+gofmt: install-tools
 	@$(MAKE) for-all-target TARGET="fmt"
 
 .PHONY: install-tools
 install-tools:
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/pavius/impi/cmd/impi
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install golang.org/x/tools/cmd/goimports
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/jcchavezs/porto/cmd/porto

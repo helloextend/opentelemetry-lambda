@@ -7,10 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdalifecycle"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/client"
+	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/processor/processortest"
+
+	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdalifecycle"
 )
 
 type MockLifecycleNotifier struct {
@@ -38,14 +40,19 @@ func (m *MockConsumer) consume(ctx context.Context, data any) error {
 func (m *MockConsumer) receiveDataAfter(d time.Duration) {
 	go func() {
 		time.Sleep(d)
+		m.lock.Lock()
 		m.gotData = false
+		m.lock.Unlock()
+		var data any
 		select {
-		case data := <-m.dataReceived:
-			m.lock.Lock()
-			m.data = data
-			m.gotData = true
-			m.lock.Unlock()
+		case data = <-m.dataReceived:
+		case <-time.After(5 * time.Second):
+			return
 		}
+		m.lock.Lock()
+		m.data = data
+		m.gotData = true
+		m.lock.Unlock()
 	}()
 }
 
@@ -105,7 +112,7 @@ func Test_newDecoupleProcessor(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			lambdalifecycle.SetNotifier(tt.notifier)
 
-			dp, err := newDecoupleProcessor(tt.args.cfg, tt.args.consumer, processortest.NewNopSettings())
+			dp, err := newDecoupleProcessor(tt.args.cfg, tt.args.consumer, processortest.NewNopSettings(component.MustNewType(typeStr)))
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
@@ -126,13 +133,13 @@ func TestLifecycle(t *testing.T) {
 	lambdalifecycle.SetNotifier(notifier)
 
 	t.Run("create and otelcol shutdown only", func(t *testing.T) {
-		dp, err := newDecoupleProcessor(config, consumer, processortest.NewNopSettings())
+		dp, err := newDecoupleProcessor(config, consumer, processortest.NewNopSettings(component.MustNewType(typeStr)))
 		require.NoError(t, err)
 		require.NoError(t, dp.shutdown(context.Background()))
 	})
 
 	t.Run("full lifecycle", func(t *testing.T) {
-		dp, err := newDecoupleProcessor(config, consumer, processortest.NewNopSettings())
+		dp, err := newDecoupleProcessor(config, consumer, processortest.NewNopSettings(component.MustNewType(typeStr)))
 		require.NoError(t, err)
 
 		dp.FunctionInvoked()
@@ -143,7 +150,7 @@ func TestLifecycle(t *testing.T) {
 	})
 
 	t.Run("full lifecycle with data from function", func(t *testing.T) {
-		dp, err := newDecoupleProcessor(config, consumer, processortest.NewNopSettings())
+		dp, err := newDecoupleProcessor(config, consumer, processortest.NewNopSettings(component.MustNewType(typeStr)))
 		require.NoError(t, err)
 
 		dp.FunctionInvoked()
@@ -165,7 +172,7 @@ func TestLifecycle(t *testing.T) {
 	})
 
 	t.Run("full lifecycle with data before shutdown", func(t *testing.T) {
-		dp, err := newDecoupleProcessor(config, consumer, processortest.NewNopSettings())
+		dp, err := newDecoupleProcessor(config, consumer, processortest.NewNopSettings(component.MustNewType(typeStr)))
 		require.NoError(t, err)
 
 		dp.FunctionInvoked()

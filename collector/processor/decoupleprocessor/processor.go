@@ -19,16 +19,16 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdalifecycle"
 	"go.opentelemetry.io/collector/client"
+	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/pmetric"
-	"go.opentelemetry.io/collector/processor/processorhelper"
-
-	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.opentelemetry.io/collector/processor"
+	"go.opentelemetry.io/collector/processor/processorhelper"
 	"go.uber.org/zap"
+
+	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdalifecycle"
 )
 
 var (

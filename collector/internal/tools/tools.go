@@ -15,7 +15,7 @@
 //go:build tools
 // +build tools
 
-package tools // import "go.opentelemetry.io/otel/internal/tools"
+package tools // import "github.com/open-telemetry/opentelemetry-lambda/collector/internal/tools"
 
 import (
 	_ "github.com/client9/misspell/cmd/misspell"
@@ -23,7 +23,6 @@ import (
 	_ "github.com/google/addlicense"
 	_ "github.com/jcchavezs/porto/cmd/porto"
 	_ "github.com/ory/go-acc"
-	_ "github.com/pavius/impi/cmd/impi"
 	_ "github.com/tcnksm/ghr"
 	_ "github.com/wadey/gocovmerge"
 	_ "go.opentelemetry.io/build-tools/chloggen"

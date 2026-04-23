@@ -18,13 +18,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdalifecycle"
 	"os"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/open-telemetry/opentelemetry-lambda/collector/internal/lifecycle"
+	"github.com/open-telemetry/opentelemetry-lambda/collector/lambdalifecycle"
 )
 
 var (
