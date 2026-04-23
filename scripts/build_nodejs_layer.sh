@@ -49,12 +49,6 @@ rm -f opentelemetry-instrumentation-aws-lambda-*.tgz
 npm install --ignore-scripts && npm run compile && npm pack --ignore-scripts
 popd > /dev/null
 
-# Build opentelemetry-instrumentation-mongodb
-pushd "$OPENTELEMETRY_JS_CONTRIB_PATH/packages/instrumentation-mongodb" > /dev/null
-rm -f opentelemetry-instrumentation-mongodb-*.tgz
-npm install --ignore-scripts && npm run compile && npm pack --ignore-scripts
-popd > /dev/null
-
 # Build opentelemetry-instrumentation-aws-sdk
 pushd "$OPENTELEMETRY_JS_CONTRIB_PATH/packages/instrumentation-aws-sdk" > /dev/null
 rm -f opentelemetry-instrumentation-aws-sdk-*.tgz
@@ -65,7 +59,6 @@ popd > /dev/null
 pushd "./nodejs/packages/cx-wrapper" > /dev/null
 npm install \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-lambda/opentelemetry-instrumentation-aws-lambda-*.tgz \
-    "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-mongodb/opentelemetry-instrumentation-mongodb-*.tgz \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-sdk/opentelemetry-instrumentation-aws-sdk-*.tgz
 popd > /dev/null
 
@@ -79,7 +72,6 @@ popd > /dev/null
 pushd "./nodejs/packages/layer" > /dev/null
 npm install \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-lambda/opentelemetry-instrumentation-aws-lambda-*.tgz \
-    "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-mongodb/opentelemetry-instrumentation-mongodb-*.tgz \
     "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-sdk/opentelemetry-instrumentation-aws-sdk-*.tgz \
     "${CWD}"/nodejs/packages/cx-wrapper/cx-wrapper-*.tgz
 popd > /dev/null
@@ -95,6 +87,8 @@ npm dedupe
 # Remove unnecessary files to reduce layer size
 find node_modules -name "*.map" -delete
 find node_modules -type d \( -name "test" -o -name "tests" -o -name "docs" -o -name "doc" \) -exec rm -rf {} + 2>/dev/null || true
+# @types/* are upstream-misdeclared runtime deps (e.g. instrumentation-aws-lambda pins @types/aws-lambda as runtime) — strip them, the JS runtime doesn't need .d.ts files.
+find node_modules -type d -name "@types" -exec rm -rf {} + 2>/dev/null || true
 # Rebuild layer with optimized dependencies
 npm run clean && npm run compile
 ls -lah build/layer.zip
