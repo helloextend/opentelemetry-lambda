@@ -15,6 +15,8 @@ TOOLS_MOD_DIR := ./internal/tools
 ALL_GO_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} \; | sort)
 OTEL_GO_MOD_DIRS := $(filter-out $(TOOLS_MOD_DIR), $(ALL_GO_MOD_DIRS))
 GOMODULES = $(OTEL_GO_MOD_DIRS) $(PWD)
+TIDY_MODULES = $(ALL_GO_MOD_DIRS) $(PWD)
+MODULES ?= $(GOMODULES)
 
 # Define a delegation target for each module
 .PHONY: $(GOMODULES)
@@ -25,7 +27,7 @@ $(GOMODULES):
 # Triggers each module's delegation target, continuing through all modules even on failure
 .PHONY: for-all-target
 for-all-target:
-	@err=0; for dir in $(GOMODULES); do \
+	@err=0; for dir in $(MODULES); do \
 		echo "Running target '$(TARGET)' in module '$$dir'"; \
 		$(MAKE) -C $$dir $(TARGET) || err=$$?; \
 	done; exit $$err
@@ -56,7 +58,7 @@ set-otelcol-version:
 
 .PHONY: gotidy
 gotidy:
-	@$(MAKE) for-all-target TARGET="tidy"
+	@$(MAKE) for-all-target TARGET="tidy" MODULES="$(TIDY_MODULES)"
 
 .PHONY: gotest
 gotest:
