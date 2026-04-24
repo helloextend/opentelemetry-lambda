@@ -6,8 +6,7 @@
   "repository": "",
   "scripts": {
     "clean": "rimraf build/*",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint . --ext .ts",
-    "lint:fix": "ESLINT_USE_FLAT_CONFIG=false eslint . --ext .ts --fix",
+    "lint": "oxlint .",
     "prepare": "npm run compile",
     "compile": "tsc -p ."
   },
@@ -52,9 +51,8 @@
     "import-in-the-middle": "3.0.0"
   },
   "devDependencies": {
+    "@types/aws-lambda": "8.10.159",
+    "oxlint": "1.31.0",
     "typescript": "5.9.3"
-  },
-  "overrides": {
-    "@types/aws-lambda": "8.10.159"
   }
 }

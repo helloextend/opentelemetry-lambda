@@ -13,10 +13,12 @@ CWD=$(pwd)
 echo "OPENTELEMETRY_JS_CONTRIB_PATH=$OPENTELEMETRY_JS_CONTRIB_PATH"
 echo "CWD=$CWD"
 
-npm cache clean --force
-
+# cx-contrib is an upstream npm-workspaces + nx monorepo with pinned
+# @types/node@22.17.1 and typescript@5.0.4 at its root. Keep npm as its
+# install/compile tool — pnpm's stricter resolution re-picks @types/node@25
+# in sub-packages, which breaks TS 5.0.4 compiles. Our own workspace
+# (nodejs/packages/*) uses pnpm below.
 pushd "$OPENTELEMETRY_JS_CONTRIB_PATH" > /dev/null
-# Prepare opentelemetry-js-contrib
 npm install
 # Generate version files in opentelemetry-js-contrib
 # Lerna 9 no longer requires useWorkspaces configuration - it uses npm workspaces by default
@@ -43,7 +45,8 @@ pushd "$OPENTELEMETRY_JS_CONTRIB_PATH/packages/propagation-utils" > /dev/null
 npm install && npm run compile
 popd > /dev/null
 
-# Build opentelemetry-instrumentation-aws-lambda
+# Build opentelemetry-instrumentation-aws-lambda and pack the tarball at the
+# path referenced by cx-wrapper/layer package.json (file:../../../.build-cache/...).
 pushd "$OPENTELEMETRY_JS_CONTRIB_PATH/packages/instrumentation-aws-lambda" > /dev/null
 rm -f opentelemetry-instrumentation-aws-lambda-*.tgz
 npm install --ignore-scripts && npm run compile && npm pack --ignore-scripts
@@ -55,41 +58,45 @@ rm -f opentelemetry-instrumentation-aws-sdk-*.tgz
 npm install --ignore-scripts && npm run compile && npm pack --ignore-scripts
 popd > /dev/null
 
-# Install forked libraries in cx-wrapper
-pushd "./nodejs/packages/cx-wrapper" > /dev/null
-npm install \
-    "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-lambda/opentelemetry-instrumentation-aws-lambda-*.tgz \
-    "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-sdk/opentelemetry-instrumentation-aws-sdk-*.tgz
+# Install the workspace. cx-wrapper + layer reference the cx-contrib tarballs
+# via relative file: paths in their package.json; --ignore-scripts prevents
+# the layer's `prepare: npm run compile` from firing before build/src/* exists.
+pushd "$CWD" > /dev/null
+pnpm install --ignore-scripts
 popd > /dev/null
 
-# Build cx-wrapper
+# Compile cx-wrapper explicitly (now that types are resolvable).
 pushd "./nodejs/packages/cx-wrapper" > /dev/null
 rm -f cx-wrapper-*.tgz
-npm install && npm pack
+pnpm compile && pnpm pack
 popd > /dev/null
 
-# Install libraries in layer
+# Build layer: clear any prior build/node_modules first, then
+# `pnpm deploy --legacy` materializes a self-contained production copy of
+# the layer package with real (non-symlinked) directories — required for
+# the Lambda layer zip, since pnpm's isolated symlinks point outside the
+# package tree and would break zip packaging.
 pushd "./nodejs/packages/layer" > /dev/null
-npm install \
-    "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-lambda/opentelemetry-instrumentation-aws-lambda-*.tgz \
-    "${OPENTELEMETRY_JS_CONTRIB_PATH}"/packages/instrumentation-aws-sdk/opentelemetry-instrumentation-aws-sdk-*.tgz \
-    "${CWD}"/nodejs/packages/cx-wrapper/cx-wrapper-*.tgz
+pnpm clean
+rm -rf node_modules
 popd > /dev/null
 
-# Install copyfiles and bestzip # used by `npm run clean/compile`
-npm install -g copyfiles bestzip rimraf
+DEPLOY_DIR="./nodejs/packages/layer/build/deploy"
+pnpm --filter @opentelemetry-lambda/sdk-layer deploy --prod --ignore-scripts --legacy "$DEPLOY_DIR"
 
-# Build layer
 pushd "./nodejs/packages/layer" > /dev/null
-npm run clean && npm install --production
-# Dedupe dependencies to remove duplicates and reduce size
-npm dedupe
+# Move deploy's materialized node_modules into the layer package so
+# postcompile's copyfiles + zip flow picks it up unchanged.
+mv build/deploy/node_modules node_modules
+rm -rf build/deploy
+# Drop pnpm-internal metadata before zipping.
+rm -rf node_modules/.modules.yaml node_modules/.pnpm node_modules/.bin
 # Remove unnecessary files to reduce layer size
 find node_modules -name "*.map" -delete
 find node_modules -type d \( -name "test" -o -name "tests" -o -name "docs" -o -name "doc" \) -exec rm -rf {} + 2>/dev/null || true
 # @types/* are upstream-misdeclared runtime deps (e.g. instrumentation-aws-lambda pins @types/aws-lambda as runtime) — strip them, the JS runtime doesn't need .d.ts files.
 find node_modules -type d -name "@types" -exec rm -rf {} + 2>/dev/null || true
-# Rebuild layer with optimized dependencies
-npm run clean && npm run compile
+# Zip the layer (postcompile runs copyfiles + native zip).
+pnpm compile
 ls -lah build/layer.zip
 popd > /dev/null

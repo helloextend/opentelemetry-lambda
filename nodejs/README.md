@@ -34,3 +34,24 @@ the root of the application:
 ```
 
 This is a thin wrapper over `./scripts/build_nodejs_layer.sh` that handles the cx-contrib fork clone/checkout when `OPENTELEMETRY_JS_CONTRIB_PATH` is unset, then calls `build_nodejs_layer.sh` to install deps and compile. The layer zip file will be present at `./packages/layer/build/layer.zip`.
+
+## CodeArtifact auth
+
+This workspace pulls from the Extend CodeArtifact registry (`extend-npm`). Authenticate locally with the Extend CLI before installing:
+
+```sh
+ec a ca l
+```
+
+If the Extend CLI is not available, fall back to the AWS CLI:
+
+```sh
+aws codeartifact login --tool npm --repository extend-npm --domain extend --domain-owner 159581800400 --region us-east-1
+```
+
+## Workspace structure
+
+- `packages/cx-wrapper` — the OpenTelemetry wrapper loaded by Lambda at cold start. Consumed by the layer package via `workspace:*`.
+- `packages/layer` — the Lambda layer package. Bundles `cx-wrapper` plus its runtime deps and produces `build/layer.zip`.
+
+pnpm workspaces are configured via the root `pnpm-workspace.yaml`; run commands from the repo root (`pnpm -r ...` or `pnpm --filter <pkg> ...`).
