@@ -9,7 +9,7 @@
     "lint": "oxlint .",
     "prepare": "npm run compile",
     "compile": "echo compiling nothing",
-    "postcompile": "pnpm exec copyfiles 'node_modules/**' build/workspace/nodejs && pnpm exec copyfiles -f 'scripts/*' build/workspace && pnpm exec copyfiles -f 'build/src/*' build/workspace && cd build/workspace && node ../../../../../node_modules/bestzip/bin/cli.js ../layer.zip *"
+    "postcompile": "pnpm exec copyfiles 'node_modules/**' build/workspace/nodejs && pnpm exec copyfiles -f 'scripts/*' build/workspace && pnpm exec copyfiles -f 'build/src/*' build/workspace && cd build/workspace && zip -qr ../layer.zip ."
   },
   "keywords": [
     "opentelemetry",
