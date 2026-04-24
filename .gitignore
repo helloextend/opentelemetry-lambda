@@ -28,6 +28,7 @@ opentelemetry-js-contrib-cx/
 import-in-the-middle/
 .build-cache/
 build-sandbox/
+node_modules/
 
 .envrc
 mise.toml

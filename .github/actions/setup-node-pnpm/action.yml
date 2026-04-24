@@ -1,0 +1,52 @@
+name: Setup Node + pnpm
+description: Install pnpm, configure AWS creds (OIDC or static), authenticate to Extend CodeArtifact, install deps.
+inputs:
+  aws-access-key-id:
+    description: AWS access key ID (static credentials). Ignored when aws-role-to-assume is set.
+    required: false
+    default: ''
+  aws-secret-access-key:
+    description: AWS secret access key (static credentials). Ignored when aws-role-to-assume is set.
+    required: false
+    default: ''
+  aws-role-to-assume:
+    description: IAM role ARN to assume via OIDC. When set, takes precedence over static keys.
+    required: false
+    default: ''
+  aws-region:
+    description: AWS region for credentials + CodeArtifact.
+    required: false
+    default: us-east-1
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
+    - name: Configure AWS credentials (OIDC)
+      if: inputs.aws-role-to-assume != ''
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.aws-role-to-assume }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Configure AWS credentials (static keys)
+      if: inputs.aws-role-to-assume == ''
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: CodeArtifact login
+      shell: bash
+      run: aws codeartifact login --tool npm --repository extend-npm --domain extend --domain-owner 159581800400 --region us-east-1
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
+        cache-dependency-path: pnpm-lock.yaml
+
+    - name: Install
+      shell: bash
+      run: pnpm install --frozen-lockfile

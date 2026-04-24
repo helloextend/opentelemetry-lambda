@@ -6,11 +6,10 @@
   "repository": "open-telemetry/opentelemetry-lambda",
   "scripts": {
     "clean": "rimraf build/*",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint . --ext .ts",
-    "lint:fix": "ESLINT_USE_FLAT_CONFIG=false eslint . --ext .ts --fix",
+    "lint": "oxlint .",
     "prepare": "npm run compile",
     "compile": "echo compiling nothing",
-    "postcompile": "copyfiles 'node_modules/**' build/workspace/nodejs && copyfiles -f 'scripts/*' build/workspace && copyfiles -f 'build/src/*' build/workspace && cd build/workspace && bestzip ../layer.zip *"
+    "postcompile": "pnpm exec copyfiles 'node_modules/**' build/workspace/nodejs && pnpm exec copyfiles -f 'scripts/*' build/workspace && pnpm exec copyfiles -f 'build/src/*' build/workspace && cd build/workspace && node ../../../../../node_modules/bestzip/bin/cli.js ../layer.zip *"
   },
   "keywords": [
     "opentelemetry",
@@ -45,7 +44,10 @@
     "@opentelemetry/sdk-trace-base": "2.6.0",
     "@opentelemetry/sdk-trace-node": "2.6.0",
     "@opentelemetry/semantic-conventions": "1.40.0",
-    "cx-wrapper": "file:../cx-wrapper/cx-wrapper-0.0.1.tgz",
+    "cx-wrapper": "workspace:*",
     "import-in-the-middle": "3.0.0"
+  },
+  "devDependencies": {
+    "oxlint": "1.31.0"
   }
 }
