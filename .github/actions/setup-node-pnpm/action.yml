@@ -1,52 +1,71 @@
 name: Setup Node + pnpm
-description: Install pnpm, configure AWS creds (OIDC or static), authenticate to Extend CodeArtifact, install deps.
+description: Install pnpm, authenticate to Extend CodeArtifact (via OIDC, static AWS keys, or a pre-minted CodeArtifact token), optionally install deps.
 inputs:
   aws-access-key-id:
-    description: AWS access key ID (static credentials). Ignored when aws-role-to-assume is set.
+    description: AWS access key ID (static credentials). Ignored when aws-role-to-assume or codeartifact-auth-token is set.
     required: false
     default: ''
   aws-secret-access-key:
-    description: AWS secret access key (static credentials). Ignored when aws-role-to-assume is set.
+    description: AWS secret access key (static credentials). Ignored when aws-role-to-assume or codeartifact-auth-token is set.
     required: false
     default: ''
   aws-role-to-assume:
-    description: IAM role ARN to assume via OIDC. When set, takes precedence over static keys.
+    description: IAM role ARN to assume via OIDC. Takes precedence over static keys. Ignored when codeartifact-auth-token is set.
+    required: false
+    default: ''
+  codeartifact-auth-token:
+    description: Pre-minted CodeArtifact auth token. When set, skips AWS credential configuration entirely — useful for read-only CI where AWS keys/OIDC aren't available.
     required: false
     default: ''
   aws-region:
-    description: AWS region for credentials + CodeArtifact.
+    description: AWS region for credentials. CodeArtifact itself is hardcoded to us-east-1.
     required: false
     default: us-east-1
+  install:
+    description: Run `pnpm install --frozen-lockfile` after setup. Set to 'false' when the caller manages install itself (e.g. via scripts/build-nodejs.sh, which first materializes cx-contrib tarballs).
+    required: false
+    default: 'true'
 runs:
   using: composite
   steps:
     - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
 
     - name: Configure AWS credentials (OIDC)
-      if: inputs.aws-role-to-assume != ''
+      if: inputs.codeartifact-auth-token == '' && inputs.aws-role-to-assume != ''
       uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
       with:
         role-to-assume: ${{ inputs.aws-role-to-assume }}
         aws-region: ${{ inputs.aws-region }}
 
     - name: Configure AWS credentials (static keys)
-      if: inputs.aws-role-to-assume == ''
+      if: inputs.codeartifact-auth-token == '' && inputs.aws-role-to-assume == ''
       uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
       with:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
         aws-region: ${{ inputs.aws-region }}
 
-    - name: CodeArtifact login
+    - name: CodeArtifact login (via AWS)
+      if: inputs.codeartifact-auth-token == ''
       shell: bash
       run: aws codeartifact login --tool npm --repository extend-npm --domain extend --domain-owner 159581800400 --region us-east-1
 
+    - name: CodeArtifact login (via pre-minted token)
+      if: inputs.codeartifact-auth-token != ''
+      shell: bash
+      env:
+        CA_TOKEN: ${{ inputs.codeartifact-auth-token }}
+      run: |
+        printf '//extend-159581800400.d.codeartifact.us-east-1.amazonaws.com/npm/extend-npm/:_authToken=%s\n' "$CA_TOKEN" >> "$HOME/.npmrc"
+        printf '//extend-159581800400.d.codeartifact.us-east-1.amazonaws.com/npm/extend-npm/:always-auth=true\n' >> "$HOME/.npmrc"
+
     - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
       with:
-        node-version: 22
+        node-version-file: .nvmrc
         cache: pnpm
         cache-dependency-path: pnpm-lock.yaml
 
     - name: Install
+      if: inputs.install == 'true'
       shell: bash
       run: pnpm install --frozen-lockfile

@@ -86,3 +86,11 @@ install-tools:
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/golangci/golangci-lint/cmd/golangci-lint
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install golang.org/x/tools/cmd/goimports
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/jcchavezs/porto/cmd/porto
+	$(GOCMD) install golang.org/x/vuln/cmd/govulncheck@v1.3.0
+
+.PHONY: govulncheck
+govulncheck: install-tools
+	@err=0; for dir in $(OTEL_GO_MOD_DIRS); do \
+		echo "Running govulncheck in module '$$dir'"; \
+		(cd $$dir && govulncheck ./...) || err=$$?; \
+	done; exit $$err
