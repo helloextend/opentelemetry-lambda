@@ -22,6 +22,20 @@ OUTPUT_ZIP="$OUTPUT_DIR/$(basename "$OUTPUT_ZIP")"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
+# Fail fast if the two archives contain overlapping entries — otherwise
+# `unzip -o` would silently clobber one with the other and produce a
+# broken layer with no signal.
+OVERLAPS="$(
+  comm -12 \
+    <(zipinfo -1 "$COLLECTOR_ZIP" | sed 's#/$##' | sort -u) \
+    <(zipinfo -1 "$NODEJS_ZIP" | sed 's#/$##' | sort -u)
+)"
+if [ -n "$OVERLAPS" ]; then
+  echo "error: collector and nodejs zips contain overlapping entries:" >&2
+  echo "$OVERLAPS" >&2
+  exit 1
+fi
+
 unzip -o "$COLLECTOR_ZIP" -d "$TMP_DIR"
 unzip -o "$NODEJS_ZIP" -d "$TMP_DIR"
 (cd "$TMP_DIR" && zip -r "$OUTPUT_ZIP" .)

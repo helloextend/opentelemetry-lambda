@@ -75,7 +75,7 @@ popd > /dev/null
 # `pnpm deploy --legacy` materializes a self-contained production copy of
 # the layer package with real (non-symlinked) directories — required for
 # the Lambda layer zip, since pnpm's isolated symlinks point outside the
-# package tree and would break bestzip packaging.
+# package tree and would break zip packaging.
 pushd "./nodejs/packages/layer" > /dev/null
 pnpm clean
 rm -rf node_modules
@@ -86,7 +86,7 @@ pnpm --filter @opentelemetry-lambda/sdk-layer deploy --prod --ignore-scripts --l
 
 pushd "./nodejs/packages/layer" > /dev/null
 # Move deploy's materialized node_modules into the layer package so
-# postcompile's copyfiles + bestzip flow picks it up unchanged.
+# postcompile's copyfiles + zip flow picks it up unchanged.
 mv build/deploy/node_modules node_modules
 rm -rf build/deploy
 # Drop pnpm-internal metadata before zipping.
@@ -96,7 +96,7 @@ find node_modules -name "*.map" -delete
 find node_modules -type d \( -name "test" -o -name "tests" -o -name "docs" -o -name "doc" \) -exec rm -rf {} + 2>/dev/null || true
 # @types/* are upstream-misdeclared runtime deps (e.g. instrumentation-aws-lambda pins @types/aws-lambda as runtime) — strip them, the JS runtime doesn't need .d.ts files.
 find node_modules -type d -name "@types" -exec rm -rf {} + 2>/dev/null || true
-# Zip the layer (postcompile runs copyfiles + bestzip).
+# Zip the layer (postcompile runs copyfiles + native zip).
 pnpm compile
 ls -lah build/layer.zip
 popd > /dev/null
